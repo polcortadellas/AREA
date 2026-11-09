@@ -1,6 +1,6 @@
 # AREA
 
-Short description of the project.
+Project of web
 
 ## Installation Process
 
