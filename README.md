@@ -1,4 +1,4 @@
-# Project Name
+# AREA
 
 Short description of the project.
 
