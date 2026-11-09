@@ -1,0 +1,34 @@
+name: CI y copia a privado
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    if: github.repository == 'polcortadellas/TU-REPO-DEV'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Tests de prueba
+        run: echo "Tests de prueba: OK"
+
+  copiar:
+    if: github.repository == 'polcortadellas/TU-REPO-DEV'
+    needs: test                 # Solo si los tests pasan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Copiar al repo privado
+        env:
+          PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
+          PRIVATE_REPO: polcortadellas/G-YEP-500-BAR-5-1-area-3
+        run: |
+          URL="https://x-access-token:${PRIVATE_TOKEN}@github.com/${PRIVATE_REPO}.git"
+          git push --force --prune "$URL" \
+            "refs/heads/*:refs/heads/*" \
+            "refs/tags/*:refs/tags/*"
