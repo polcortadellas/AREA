@@ -27,10 +27,11 @@ jobs:
       - name: Copiar al repo privado
         env:
           SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          PRIVATE_REPO: polcortadellas/G-YEP-500-BAR-5-1-area-3
+          PRIVATE_REPO: EpitechPGE3-2026/G-YEP-500-BAR-5-1-area-3
         run: |
           mkdir -p ~/.ssh
           echo "$SSH_KEY" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan github.com >> ~/.ssh/known_hosts
+          ssh -T git@github.com || true
           git push --force "git@github.com:${PRIVATE_REPO}.git" refs/heads/main:refs/heads/main
