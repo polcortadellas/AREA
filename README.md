@@ -2,7 +2,7 @@
 
 Short description of the project.
 
-## Installation
+## Installation Process
 
 ```bash
 # Add installation steps here
