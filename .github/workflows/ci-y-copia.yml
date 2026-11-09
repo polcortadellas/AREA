@@ -7,16 +7,17 @@ on:
 
 jobs:
   test:
-    if: github.repository == 'polcortadellas/TU-REPO-DEV'
+    if: github.repository == 'polcortadellas/AREA'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Tests de prueba
-        run: echo "Tests de prueba: OK"
+        run: |
+          echo "Tests de prueba: OK"
 
   copiar:
-    if: github.repository == 'polcortadellas/TU-REPO-DEV'
-    needs: test                 # Solo si los tests pasan
+    if: github.repository == 'polcortadellas/AREA'
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -25,10 +26,11 @@ jobs:
 
       - name: Copiar al repo privado
         env:
-          PRIVATE_TOKEN: ${{ secrets.PRIVATE_TOKEN }}
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           PRIVATE_REPO: polcortadellas/G-YEP-500-BAR-5-1-area-3
         run: |
-          URL="https://x-access-token:${PRIVATE_TOKEN}@github.com/${PRIVATE_REPO}.git"
-          git push --force --prune "$URL" \
-            "refs/heads/*:refs/heads/*" \
-            "refs/tags/*:refs/tags/*"
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan github.com >> ~/.ssh/known_hosts
+          git push --force "git@github.com:${PRIVATE_REPO}.git" refs/heads/main:refs/heads/main
