@@ -25,7 +25,7 @@ Done without discussing with anyone. Total = Σ(weight × score).
 
 Option A: Go, ~20 mins/ 0 experience before
 
-Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE.md`](../spikes/nestjs/SPIKE.md)
+Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
 
 | Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C | Option D |
 |---------------------------------|:------:|:------------:|:----------------:|:--------:|:--------:|
