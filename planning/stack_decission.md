@@ -22,17 +22,22 @@ Maximum possible weighted score: Σweights × 5 = **___**
 
 Done without discussing with anyone. Total = Σ(weight × score).
 
-| Criterion                       | Weight | Option A | Option B | Option C |
-|---------------------------------|:------:|:--------:|:--------:|:--------:|
-| Security                        |   3    |          |          |          |
-| OAuth2 / OIDC support           |   3    |          |          |          |
-| OpenAPI generation              |   3    |          |          |          |
-| Concurrency (hooks)             |   2    |          |          |          |
-| Team learning curve             |   2    |          |          |          |
-| Ecosystem and libraries         |   2    |          |          |          |
-| Docker deployment               |   2    |          |          |          |
-| Typing and maintainability      |   1    |          |          |          |
-| **Weighted total**              |        |          |          |          |
+
+Option A: Go, ~20 mins/ 0 experience before
+
+Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
+
+| Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C | Option D |
+|---------------------------------|:------:|:------------:|:----------------:|:--------:|:--------:|
+| Security                        |   3    |      4       |        3         |          |          |
+| OAuth2 / OIDC support           |   3    |      4       |        4         |          |          |
+| OpenAPI generation              |   3    |      4       |        5         |          |          |
+| Concurrency (hooks)             |   2    |      5       |        3         |          |          |
+| Team learning curve             |   2    |      2       |        4         |          |          |
+| Ecosystem and libraries         |   2    |      3       |        5         |          |          |
+| Docker deployment               |   2    |      5       |        4         |          |          |
+| Typing and maintainability      |   1    |      5       |        4         |          |          |
+| **Weighted total**              |        |    **71**    |      **72**      |          |          |
 
 ## 3. Team comparison
 
