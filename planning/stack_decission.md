@@ -27,17 +27,19 @@ Option A: Go, ~20 mins/ 0 experience before
 
 Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
 
-| Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C | Option D |
-|---------------------------------|:------:|:------------:|:----------------:|:--------:|:--------:|
-| Security                        |   3    |      4       |        3         |          |          |
-| OAuth2 / OIDC support           |   3    |      4       |        4         |          |          |
-| OpenAPI generation              |   3    |      4       |        5         |          |          |
-| Concurrency (hooks)             |   2    |      5       |        3         |          |          |
-| Team learning curve             |   2    |      2       |        4         |          |          |
-| Ecosystem and libraries         |   2    |      3       |        5         |          |          |
-| Docker deployment               |   2    |      5       |        4         |          |          |
-| Typing and maintainability      |   1    |      5       |        4         |          |          |
-| **Weighted total**              |        |    **71**    |      **72**      |          |          |
+Option C: Hono + Bun + PostgreSQL, ~15 mins / 0 Hono/Bun experience before, some JS / TS. Details: [`spikes/hono_bun/README.md`](../spikes/hono_bun/README.md)
+
+| Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C: Hono/Bun | Option D |
+|---------------------------------|:------:|:------------:|:----------------:|:------------------:|:--------:|
+| Security                        |   3    |      4       |        3         |         3          |          |
+| OAuth2 / OIDC support           |   3    |      4       |        4         |         4          |          |
+| OpenAPI generation              |   3    |      4       |        5         |         4          |          |
+| Concurrency (hooks)             |   2    |      5       |        3         |         4          |          |
+| Team learning curve             |   2    |      2       |        4         |         5          |          |
+| Ecosystem and libraries         |   2    |      3       |        5         |         4          |          |
+| Docker deployment               |   2    |      5       |        4         |         5          |          |
+| Typing and maintainability      |   1    |      5       |        4         |         4          |          |
+| **Weighted total**              |        |    **71**    |      **72**      |       **73**       |          |
 
 ## 3. Team comparison
 
