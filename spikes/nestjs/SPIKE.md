@@ -1,3 +1,0 @@
-# Spike: NestJS
-
-TODO
