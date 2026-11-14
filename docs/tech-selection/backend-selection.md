@@ -25,9 +25,9 @@ Done without discussing with anyone. Total = Σ(weight × score).
 
 Option A: Go, ~20 mins/ 0 experience before
 
-Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
+Option B: NestJS ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`../spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
 
-Option C: Hono + Bun + PostgreSQL, ~15 mins / 0 Hono/Bun experience before, some JS / TS. Details: [`spikes/hono_bun/README.md`](../spikes/hono_bun/README.md)
+Option C: Hono ~15 mins / 0 Hono/Bun experience before, some JS / TS. Details: [`spikes/hono_bun/README.md`](../spikes/hono_bun/README.md)
 
 | Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C: Hono/Bun | Option D |
 |---------------------------------|:------:|:------------:|:----------------:|:------------------:|:--------:|
@@ -48,5 +48,5 @@ Flag every criterion where two members differ by **more than 2 points**. Each di
 | Criterion | Member 1 | Member 2 | Member 3 | Difference > 2 | Cause of divergence |
 |-----------|:--------:|:--------:|:--------:|:--------------:|---------------------|
 |           |          |          |          |                |                     |
-    
-> Summary for `decision/RECOMMENDATION.md` (250-300 words).
+
+> Summary for `RECOMMENDATION.md` (250-300 words).
