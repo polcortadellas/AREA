@@ -17,24 +17,24 @@ Score per option: **1** = very poor, **5** = excellent.
 
 Maximum possible weighted score: Σweights × 5 = **70**
 
-## 2. Individual scoring (member: ______)
+## 2. Individual scoring (member: Pol)
 
 Done without discussing with anyone. Total = Σ(weight × score).
 
 * **Option A:** ______________________ (Details: `spikes/...`)
-* **Option B:** ______________________ (Details: `spikes/...`)
+* **Option B:** SQLite (Details: `../../spikes/sqlite_vue/spike-vue-sqlite.md`)
 * **Option C:** ______________________ (Details: `spikes/...`)
 * **Option D:** ______________________ (Details: `spikes/...`)
 
 | Criterion | Weight | Option A | Option B | Option C | Option D |
 |-----------|:------:|:--------:|:--------:|:--------:|:--------:|
-| Security & Encryption at Rest (`SEC-CRYPTO`) | 3 | | | | |
-| Hybrid Data Model (Relational + Dynamic JSON) | 3 | | | | |
-| ACID Transactions & Concurrency | 3 | | | | |
-| Backup & Restore Reliability (`SYS-BACKUP`) | 2 | | | | |
-| Backend Ecosystem & Driver Maturity | 2 | | | | |
-| Operational Footprint in Docker | 1 | | | | |
-| **Weighted total** | | | | | |
+| Security & Encryption at Rest (`SEC-CRYPTO`) | 3 |  | 2 |  |  |
+| Hybrid Data Model (Relational + Dynamic JSON) | 3 |  | 3 |  |  |
+| ACID Transactions & Concurrency | 3 |  | 3 |  |  |
+| Backup & Restore Reliability (`SYS-BACKUP`) | 2 |  | 4 |  |  |
+| Backend Ecosystem & Driver Maturity | 2 |  | 3 |  |  |
+| Operational Footprint in Docker | 1 |  | 5 |  |  |
+| **Weighted total** | |  | **43** |  |  |
 
 ## 3. Team comparison
 

@@ -17,24 +17,24 @@ Score per option: **1** = very poor, **5** = excellent.
 
 Maximum possible weighted score: Σweights × 5 = **70**
 
-## 2. Individual scoring (member: ______)
+## 2. Individual scoring (member: Pol)
 
 Done without discussing with anyone. Total = Σ(weight × score).
 
-* **Option A:** ______________________ (Details: `spikes/...`)
+* **Option A:** Vue 3 + Vite (Details: `../../spikes/sqlite_vue/spike-vue-sqlite.md`)
 * **Option B:** ______________________ (Details: `spikes/...`)
 * **Option C:** ______________________ (Details: `spikes/...`)
 * **Option D:** ______________________ (Details: `spikes/...`)
 
 | Criterion | Weight | Option A | Option B | Option C | Option D |
 |-----------|:------:|:--------:|:--------:|:--------:|:--------:|
-| Security (XSS, CSRF & token storage) | 3 | | | | |
-| Dynamic form rendering (`/about.json`) | 3 | | | | |
-| Accessibility (WCAG AA) & i18n | 3 | | | | |
-| Team learning curve | 2 | | | | |
-| OpenAPI / TypeScript integration | 2 | | | | |
-| Docker build & bundle footprint | 1 | | | | |
-| **Weighted total** | | | | | |
+| Security (XSS, CSRF & token storage) | 3 | 4 |  |  |  |
+| Dynamic form rendering (`/about.json`) | 3 | 5 |  |  |  |
+| Accessibility (WCAG AA) & i18n | 3 | 4 |  |  |  |
+| Team learning curve | 2 | 4 |  |  |  |
+| OpenAPI / TypeScript integration | 2 | 4 |  |  |  |
+| Docker build & bundle footprint | 1 | 5 |  |  |  |
+| **Weighted total** | | **60** |  |  |  |
 
 ## 3. Team comparison
 
