@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: area
+      POSTGRES_PASSWORD: area
+      POSTGRES_DB: area
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U area"]
+      interval: 5s
+      retries: 10
+
+  server:
+    build: ./server
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: postgres://area:area@db:5432/area
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-data:

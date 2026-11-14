@@ -22,19 +22,19 @@ Maximum possible weighted score: Σweights × 5 = **70**
 Done without discussing with anyone. Total = Σ(weight × score).
 
 * **Option A:** ______________________ (Details: `spikes/...`)
-* **Option B:** ______________________ (Details: `spikes/...`)
+* **Option B:** PostgreSQL 17 via TypeORM from NestJS (Achille) (Details: [`spikes/nestjs/SPIKE.md`](../../spikes/nestjs/SPIKE.md#4-persistence-postgresql--typeorm-strengths-and-weaknesses))
 * **Option C:** ______________________ (Details: `spikes/...`)
 * **Option D:** ______________________ (Details: `spikes/...`)
 
-| Criterion | Weight | Option A | Option B | Option C | Option D |
-|-----------|:------:|:--------:|:--------:|:--------:|:--------:|
-| Security & Encryption at Rest (`SEC-CRYPTO`) | 3 | | | | |
-| Hybrid Data Model (Relational + Dynamic JSON) | 3 | | | | |
-| ACID Transactions & Concurrency | 3 | | | | |
-| Backup & Restore Reliability (`SYS-BACKUP`) | 2 | | | | |
-| Backend Ecosystem & Driver Maturity | 2 | | | | |
-| Operational Footprint in Docker | 1 | | | | |
-| **Weighted total** | | | | | |
+| Criterion | Weight | Option A | Option B: PostgreSQL | Option C | Option D |
+|-----------|:------:|:--------:|:--------------------:|:--------:|:--------:|
+| Security & Encryption at Rest (`SEC-CRYPTO`) | 3 | | 4 | | |
+| Hybrid Data Model (Relational + Dynamic JSON) | 3 | | 5 | | |
+| ACID Transactions & Concurrency | 3 | | 5 | | |
+| Backup & Restore Reliability (`SYS-BACKUP`) | 2 | | 5 | | |
+| Backend Ecosystem & Driver Maturity | 2 | | 4 | | |
+| Operational Footprint in Docker | 1 | | 4 | | |
+| **Weighted total** | | | **64** | | |
 
 ## 3. Team comparison
 
