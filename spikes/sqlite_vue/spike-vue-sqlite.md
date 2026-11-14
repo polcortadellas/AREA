@@ -11,7 +11,9 @@ Works. Tested in this environment (Go 1.22.2, Node 20.19.5, Vue 3.5, Vite 6, lin
 - `go vet` and `go test ./...` (backend): pass (`GET /ping`, a note written and read back from SQLite, empty note rejected with `400`).
 - `bun run build` (web): `vue-tsc` and `vite build` pass.
 - Manual end-to-end through the Vite dev proxy: `GET /api/ping` → `{"status":"ok"}`, `POST /api/notes` stores a row, `GET /api/notes` returns it; the `.db` file is created on disk.
+- Docker (`backend/Dockerfile`, multi-stage, non-root, `CGO_ENABLED=0`): image is **21 MB**; run with a volume on `/data`, `/ping` and `POST`/`GET /notes` work.
 - Not tested: the page in a real browser (the Vue rendering was not looked at).
+- Estimates only (not tested here): encryption at rest (plain SQLite has none; it would need SQLCipher or app-level AES), input validation beyond the empty-note check, JSON columns (`json1`), concurrent writes, and the front-end security score (XSS/CSRF/token storage).
 
 ## Approach
 
