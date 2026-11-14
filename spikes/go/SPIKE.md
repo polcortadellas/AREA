@@ -1,3 +1,0 @@
-# Spike: Go
-
-TODO
