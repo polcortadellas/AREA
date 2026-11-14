@@ -22,19 +22,19 @@ Maximum possible weighted score: Σweights × 5 = **70**
 Done without discussing with anyone. Total = Σ(weight × score).
 
 * **Option A:** ______________________ (Details: `spikes/...`)
-* **Option B:** ______________________ (Details: `spikes/...`)
+* **Option B:** React 19 + Vite (Achille, some prior JS / Next.js experience) (Details: [`spikes/nestjs/SPIKE.md`](../../spikes/nestjs/SPIKE.md#3-front-end-react--vite-strengths-and-weaknesses))
 * **Option C:** ______________________ (Details: `spikes/...`)
 * **Option D:** ______________________ (Details: `spikes/...`)
 
-| Criterion | Weight | Option A | Option B | Option C | Option D |
-|-----------|:------:|:--------:|:--------:|:--------:|:--------:|
-| Security (XSS, CSRF & token storage) | 3 | | | | |
-| Dynamic form rendering (`/about.json`) | 3 | | | | |
-| Accessibility (WCAG AA) & i18n | 3 | | | | |
-| Team learning curve | 2 | | | | |
-| OpenAPI / TypeScript integration | 2 | | | | |
-| Docker build & bundle footprint | 1 | | | | |
-| **Weighted total** | | | | | |
+| Criterion | Weight | Option A | Option B: React | Option C | Option D |
+|-----------|:------:|:--------:|:---------------:|:--------:|:--------:|
+| Security (XSS, CSRF & token storage) | 3 | | 4 | | |
+| Dynamic form rendering (`/about.json`) | 3 | | 4 | | |
+| Accessibility (WCAG AA) & i18n | 3 | | 3 | | |
+| Team learning curve | 2 | | 5 | | |
+| OpenAPI / TypeScript integration | 2 | | 4 | | |
+| Docker build & bundle footprint | 1 | | 3 | | |
+| **Weighted total** | | | **54** | | |
 
 ## 3. Team comparison
 
