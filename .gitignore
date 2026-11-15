@@ -6,4 +6,8 @@ dist/
 package-lock.json
 bun.lockb
 
+#docs
+all-md.txt
+git-check.txt
+
 .env
