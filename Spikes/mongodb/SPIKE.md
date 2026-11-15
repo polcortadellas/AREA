@@ -17,7 +17,7 @@ Prior experience: never used MongoDB before.
 
 ## Where I was when the time ran out
 
-Done at 20:53, after about **1 minute** of execution (script written with AI assistance, then run and reviewed by me). All four checks ran and gave a clear answer:
+Done at 20:53, after about **1 minute** of execution. All four checks ran and gave a clear answer:
 
 | # | Check | Result |
 |---|---|---|
