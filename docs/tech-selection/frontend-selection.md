@@ -17,43 +17,25 @@ Score per option: **1** = very poor, **5** = excellent.
 
 Maximum possible weighted score: Σweights × 5 = **70**
 
-## 2. Individual scoring (member: Pol)
+## 2. Individual scoring (member: ______)
 
 Done without discussing with anyone. Total = Σ(weight × score).
 
-* **Option A:** Vue 3 + Vite (Details: `../../spikes/sqlite_vue/spike-vue-sqlite.md`)
-* **Option B:** ______________________ (Details: `spikes/...`)
-* **Option C:** ______________________ (Details: `spikes/...`)
-* **Option D:** ______________________ (Details: `spikes/...`)
+Option A: Vue 3 + Vite. Details: [`../../spikes/sqlite_vue/spike-vue-sqlite.md`](../../spikes/sqlite_vue/spike-vue-sqlite.md)
 
-| Criterion | Weight | Option A | Option B | Option C | Option D |
-|-----------|:------:|:--------:|:--------:|:--------:|:--------:|
-| Security (XSS, CSRF & token storage) | 3 | 4 |  |  |  |
-| Dynamic form rendering (`/about.json`) | 3 | 5 |  |  |  |
-| Accessibility (WCAG AA) & i18n | 3 | 4 |  |  |  |
-| Team learning curve | 2 | 4 |  |  |  |
-| OpenAPI / TypeScript integration | 2 | 4 |  |  |  |
-| Docker build & bundle footprint | 1 | 5 |  |  |  |
-| **Weighted total** | | **60** |  |  |  |
+Option B: React 19 + Vite. Details: [`../../spikes/nestjs/SPIKE.md`](../../spikes/nestjs/SPIKE.md#3-front-end-react--vite-strengths-and-weaknesses)
 
-## 2. Individual scoring (member: Achille)
+Option C: Flutter Web. Details: [`../../spikes/flutter/SPIKE.md`](../../spikes/flutter/SPIKE.md) (scores are estimates: no measurements were kept)
 
-Done without discussing with anyone. Total = Σ(weight × score).
-
-* **Option A:** ______________________ (Details: `spikes/...`)
-* **Option B:** React 19 + Vite (Achille, some prior JS / Next.js experience) (Details: [`spikes/nestjs/SPIKE.md`](../../spikes/nestjs/SPIKE.md#3-front-end-react--vite-strengths-and-weaknesses))
-* **Option C:** ______________________ (Details: `spikes/...`)
-* **Option D:** ______________________ (Details: `spikes/...`)
-
-| Criterion | Weight | Option A | Option B: React | Option C | Option D |
-|-----------|:------:|:--------:|:---------------:|:--------:|:--------:|
-| Security (XSS, CSRF & token storage) | 3 | | 4 | | |
-| Dynamic form rendering (`/about.json`) | 3 | | 4 | | |
-| Accessibility (WCAG AA) & i18n | 3 | | 3 | | |
-| Team learning curve | 2 | | 5 | | |
-| OpenAPI / TypeScript integration | 2 | | 4 | | |
-| Docker build & bundle footprint | 1 | | 3 | | |
-| **Weighted total** | | | **54** | | |
+| Criterion                              | Weight | Option A: Vue | Option B: React | Option C: Flutter |
+|----------------------------------------|:------:|:-------------:|:---------------:|:-----------------:|
+| Security (XSS, CSRF & token storage)   |   3    |       4       |        4        |         3         |
+| Dynamic form rendering (`/about.json`) |   3    |       5       |        4        |         3         |
+| Accessibility (WCAG AA) & i18n         |   3    |       4       |        3        |         2         |
+| Team learning curve                    |   2    |       4       |        4        |         2         |
+| OpenAPI / TypeScript integration       |   2    |       4       |        4        |         3         |
+| Docker build & bundle footprint        |   1    |       5       |        3        |         2         |
+| **Weighted total**                     |        |    **60**     |     **52**      |      **36**       |
 
 ## 3. Team comparison
 
