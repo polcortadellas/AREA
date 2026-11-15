@@ -8,4 +8,4 @@
 
 Runs are queued through a transactional outbox in PostgreSQL and Redis Streams as the broker ([ADR 0003](../docs/adr/0003-workflow-engine-broker.md)); Redis Streams is not yet validated in a spike, which task M-11 will do.
 
-**Disagreement inside the team and how it was settled.** [TO FILL: describe the real disagreement and how it was resolved.]
+**Disagreement inside the team and how it was settled.** The back-end matrix put Hono/Bun, NestJS and FastAPI one or two points above Go. Pol argued for Go: better concurrency for hooks, smaller images, and since nobody had built anything in Go, all four would learn it together. Achille, with some basic Go exposure, agreed; the other two had used none of the options and accepted, so it was settled by consensus.

@@ -1,6 +1,6 @@
 # AREA
 
-Project of web
+AREA: an IFTTT/Zapier-style automation platform (Go server, React web client, React Native Android client).
 
 ## Milestone 1 deliverables
 
