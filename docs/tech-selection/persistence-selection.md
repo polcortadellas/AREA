@@ -55,6 +55,27 @@ Done without discussing with anyone. Total = Σ(weight × score).
 | Operational Footprint in Docker | 1 | | 4 | | |
 | **Weighted total** | | | **64** | | |
 
+## 2. Individual scoring (member: Edu)
+
+Done without discussing with anyone. Total = Σ(weight × score).
+
+* **Option A:** ______________________ (Details: `spikes/...`)
+* **Option B:** ______________________ (Details: `spikes/...`)
+* **Option C:** ______________________ (Details: `spikes/...`)
+* **Option D:** MongoDB 8.0 via pymongo (Edu) (Details: [`spikes/mongodb/SPIKE.md`](../../spikes/mongodb/SPIKE.md))
+
+| Criterion | Weight | Option A | Option B | Option C | Option D: MongoDB |
+|-----------|:------:|:--------:|:--------:|:--------:|:-----------------:|
+| Security & Encryption at Rest (`SEC-CRYPTO`) | 3 | | | | 3 |
+| Hybrid Data Model (Relational + Dynamic JSON) | 3 | | | | 2 |
+| ACID Transactions & Concurrency | 3 | | | | 3 |
+| Backup & Restore Reliability (`SYS-BACKUP`) | 2 | | | | 4 |
+| Backend Ecosystem & Driver Maturity | 2 | | | | 4 |
+| Operational Footprint in Docker | 1 | | | | 2 |
+| **Weighted total** | | | | | **42** |
+
+Why: roles and TLS exist, but the default image starts without authentication (3). JSON documents are a perfect fit, but there are no foreign keys: a workflow owned by a non-existent user was accepted (2). Single-document writes are atomic and the unique index deduplicates hook events, but multi-document transactions are refused without a replica set (3). `mongodump` / `mongorestore` are one command each (4). pymongo and the official Go driver are mature, but there is no built-in migration tool (4). The image is 1.29 GB (2).
+
 ## 3. Team comparison
 
 Flag every criterion where two members differ by **more than 2 points**. Each divergence is a finding, not a rounding error.
