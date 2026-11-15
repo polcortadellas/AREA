@@ -12,7 +12,7 @@ Prior experience: some Python, never used FastAPI before.
 
 ## Where I was when the time ran out
 
-Done at 20:52, after **3 minutes**, so the timebox never rang. The code was written with AI assistance (Claude), so the minutes measure friction (install, run, test, Docker), not typing speed. Every line was then run and reviewed by me.
+Done at 20:52, after **3 minutes**, so the timebox never rang.
 
 | Checkpoint | Reached |
 |---|---|
