@@ -25,19 +25,23 @@ Done without discussing with anyone. Total = Σ(weight × score).
 
 Option A: Go, ~20 mins/ 0 experience before
 
-Option B: React + NestJS + PostgreSQL, ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
+Option B: NestJS ~15 mins (AI-assisted) / 0 NestJS experience before, some JS / Next.js. Details: [`../spikes/nestjs/SPIKE-ping.md`](../spikes/nestjs/SPIKE-ping.md)
 
-| Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C | Option D |
-|---------------------------------|:------:|:------------:|:----------------:|:--------:|:--------:|
-| Security                        |   3    |      4       |        3         |          |          |
-| OAuth2 / OIDC support           |   3    |      4       |        4         |          |          |
-| OpenAPI generation              |   3    |      4       |        5         |          |          |
-| Concurrency (hooks)             |   2    |      5       |        3         |          |          |
-| Team learning curve             |   2    |      2       |        4         |          |          |
-| Ecosystem and libraries         |   2    |      3       |        5         |          |          |
-| Docker deployment               |   2    |      5       |        4         |          |          |
-| Typing and maintainability      |   1    |      5       |        4         |          |          |
-| **Weighted total**              |        |    **71**    |      **72**      |          |          |
+Option C: Hono ~15 mins / 0 Hono/Bun experience before, some JS / TS. Details: [`spikes/hono_bun/README.md`](../spikes/hono_bun/README.md)
+
+Option D: FastAPI ~3 mins (AI-assisted) / 0 FastAPI experience before, some Python. Details: [`../../spikes/fastapi/SPIKE.md`](../../spikes/fastapi/SPIKE.md)
+
+| Criterion                       | Weight | Option A: Go | Option B: NestJS | Option C: Hono/Bun | Option D: FastAPI |
+|---------------------------------|:------:|:------------:|:----------------:|:------------------:|:-----------------:|
+| Security                        |   3    |      4       |        3         |         3          |         4         |
+| OAuth2 / OIDC support           |   3    |      4       |        4         |         4          |         4         |
+| OpenAPI generation              |   3    |      4       |        5         |         4          |         5         |
+| Concurrency (hooks)             |   2    |      5       |        3         |         4          |         3         |
+| Team learning curve             |   2    |      2       |        4         |         5          |         4         |
+| Ecosystem and libraries         |   2    |      3       |        5         |         4          |         5         |
+| Docker deployment               |   2    |      5       |        4         |         5          |         3         |
+| Typing and maintainability      |   1    |      5       |        4         |         4          |         3         |
+| **Weighted total**              |        |    **71**    |      **72**      |       **73**       |      **72**       |
 
 ## 3. Team comparison
 
@@ -46,5 +50,5 @@ Flag every criterion where two members differ by **more than 2 points**. Each di
 | Criterion | Member 1 | Member 2 | Member 3 | Difference > 2 | Cause of divergence |
 |-----------|:--------:|:--------:|:--------:|:--------------:|---------------------|
 |           |          |          |          |                |                     |
-    
-> Summary for `decision/RECOMMENDATION.md` (250-300 words).
+
+> Summary for `RECOMMENDATION.md` (250-300 words).

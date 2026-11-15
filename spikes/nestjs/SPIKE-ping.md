@@ -33,7 +33,7 @@ Works. Tested in this environment (Node 22.14.0, NestJS 11, macOS arm64):
 
 ## Open items
 
-- Swagger, OAuth2, security middleware, PostgreSQL, scheduled hooks, Docker and a React client were also explored. They informed the scores in `planning/stack_decission.md` but are kept out of this spike so all stacks are compared on the same `/ping` snippet.
+- Swagger, OAuth2, security middleware, PostgreSQL, scheduled hooks, Docker and a React client were also explored. They informed the scores in `../../decision/stack_decission.md` but are kept out of this spike so all stacks are compared on the same `/ping` snippet.
 
 ## How to reproduce
 
