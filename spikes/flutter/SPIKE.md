@@ -12,7 +12,7 @@ Recovered from `spikes/hono_bun/frontend` (commit `4a0cdf1`), which was removed 
 - The API address is not in the source: it comes from `--dart-define=API_URL=...` at build time.
 - `test/widget_test.dart`: one widget test (the screen renders with the "Ping /ping" button).
 - `Dockerfile`: multi-stage, builds with `ghcr.io/cirruslabs/flutter:stable`, serves the static web build with `nginx:alpine`.
-- Dependencies: `http` only. Flutter platform folders (`android/`, `ios/`, `web/`, ...) are the generated template.
+- Dependencies: `http` only. The generated platform folders (`android/`, `ios/`, `linux/`, `macos/`, `windows/`) and the template README were dropped to keep the spike small; only `web/` is kept. `flutter create .` recreates them.
 
 ## What was NOT checked
 
