@@ -13,5 +13,11 @@ server/area
 #docs
 all-md.txt
 git-check.txt
+issues-check.tsv
+project-check.tsv
+area-issues.docx
+area-additiona
 
 .env
+area-additional_features_marked.pdf
+area-project-marked.pdf
