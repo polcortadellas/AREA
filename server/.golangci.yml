@@ -1,0 +1,27 @@
+version: "2"
+
+run:
+  timeout: 5m
+
+linters:
+  # "standard" = errcheck, govet, ineffassign, staticcheck, unused.
+  default: standard
+  enable:
+    - bodyclose   # unclosed HTTP response bodies (connectors call many APIs)
+    - errorlint   # wrapped errors compared with == instead of errors.Is
+    - gosec       # security issues (SEC-CRYPTO, SYS-SECRETS)
+    - misspell
+    - noctx       # HTTP requests without a context (no timeouts/cancel)
+    - unconvert
+  exclusions:
+    rules:
+      # Tests may use fixed credentials and unchecked helpers.
+      - path: _test\.go
+        linters:
+          - gosec
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
