@@ -1,7 +1,17 @@
 # AREA monorepo: server/ (Go), web/ (React + Vite), mobile/ (React Native, Android).
 # `make lint` must exit 0 before a PR is opened (M-01 "done when").
 
-.PHONY: install lint lint-server lint-web lint-mobile format format-server format-web format-mobile
+.PHONY: install lint lint-server lint-web lint-mobile format format-server format-web format-mobile up down logs
+
+# Docker Compose
+up:
+	docker compose up --build -d
+
+down:
+	docker compose down
+
+logs:
+	docker compose logs -f
 
 install:
 	cd server && go mod download

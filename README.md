@@ -38,14 +38,30 @@ Each module can also be checked on its own: `make lint-server`, `make lint-web`,
 
 ## Installation Process
 
+Requirements: Docker with Docker Compose v2.
+
 ```bash
-# Add installation steps here
+cp .env.example .env   # then replace every change-me value
+docker compose up --build
 ```
+
+The first build takes a while: the Android APK is compiled inside Docker (on Apple Silicon it runs under x86_64 emulation).
 
 ## Usage
 
+| What | Where |
+|---|---|
+| API | http://localhost:8080 (`GET /ping` answers `pong`) |
+| Web client | http://localhost:8081 |
+| Mailpit (inbox for confirmation e-mails) | http://localhost:8025 |
+| Android APK | `./dist/client.apk` (written by the `android-builder` container, which then exits) |
+
+PostgreSQL and Redis are only reachable from inside the Compose network. Host ports can be changed in `.env`.
+
 ```bash
-# Add usage examples here
+make up     # docker compose up --build -d
+make logs   # follow the logs of every container
+make down   # stop the stack (data volumes are kept)
 ```
 
 ## Testing
