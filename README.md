@@ -41,7 +41,7 @@ Each module can also be checked on its own: `make lint-server`, `make lint-web`,
 Requirements: Docker with Docker Compose v2.
 
 ```bash
-cp .env.example .env   # then replace every change-me value
+make env                  # creates .env from .env.example with random secrets
 docker compose up --build
 ```
 

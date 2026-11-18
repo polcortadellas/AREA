@@ -1,9 +1,19 @@
 # AREA monorepo: server/ (Go), web/ (React + Vite), mobile/ (React Native, Android).
 # `make lint` must exit 0 before a PR is opened (M-01 "done when").
 
-.PHONY: install lint lint-server lint-web lint-mobile format format-server format-web format-mobile up down logs
+.PHONY: install lint lint-server lint-web lint-mobile format format-server format-web format-mobile env up down logs
 
 # Docker Compose
+env:
+	@test ! -f .env || { echo ".env already exists, remove it first"; exit 1; }
+	@while IFS= read -r line; do \
+		case "$$line" in \
+			*=change-me) echo "$${line%change-me}$$(openssl rand -hex 24)" ;; \
+			*) echo "$$line" ;; \
+		esac; \
+	done < .env.example > .env
+	@echo ".env created with random secrets"
+
 up:
 	docker compose up --build -d
 
