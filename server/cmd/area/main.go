@@ -19,6 +19,8 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/polcortadellas/AREA/server/internal/db"
 )
 
 func main() {
@@ -50,6 +52,14 @@ func run() error {
 }
 
 func runAPI(ctx context.Context, addr string) error {
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return errors.New("DATABASE_URL is not set")
+	}
+	if err := db.Migrate(dbURL); err != nil {
+		return fmt.Errorf("migrate: %w", err)
+	}
+
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
