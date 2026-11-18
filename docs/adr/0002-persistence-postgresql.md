@@ -21,4 +21,4 @@ PostgreSQL, with `jsonb` for per-service configuration.
 - **Positive:** foreign keys, full ACID, unique constraints for idempotency, `SKIP LOCKED` for job queues, `pg_dump` / `pg_restore` for backups.
 - **Negative:** no encryption at rest by default, so SEC-CRYPTO is done in the application; a migration tool is needed (TypeORM's `synchronize` is for spikes only); an extra container with a volume and a healthcheck.
 - **Job queue:** `SKIP LOCKED` is not used as the job queue; the broker decision is [ADR 0003](0003-workflow-engine-broker.md), where a PostgreSQL queue is kept as the fallback.
-- **Not tested yet:** PostgreSQL with the Go driver, and `jsonb` columns.
+- **Tested:** PostgreSQL with the Go driver (`pgx`) and `jsonb` columns, through the M-07 migrations (`server/internal/db`), including up, down and up again.
