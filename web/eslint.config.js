@@ -27,6 +27,11 @@ export default defineConfig([
       ],
     },
   },
+  // shadcn/ui files export variants next to components; they are generated, keep them as-is.
+  {
+    files: ['src/shared/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
+  },
   // Must stay last: turns off ESLint rules that would fight with Prettier.
   prettier,
 ]);
