@@ -14,17 +14,21 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-func Migrate(databaseURL string) error {
+func newMigrator(databaseURL string) (*migrate.Migrate, error) {
 	src, err := iofs.New(migrationsFS, "migrations")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	url := strings.Replace(databaseURL, "postgres://", "pgx5://", 1)
-	m, err := migrate.NewWithSourceInstance("iofs", src, url)
+	return migrate.NewWithSourceInstance("iofs", src, url)
+}
+
+func Migrate(databaseURL string) error {
+	m, err := newMigrator(databaseURL)
 	if err != nil {
 		return err
 	}
-	defer m.Close()
+	defer func() { _, _ = m.Close() }()
 	if err := m.Up(); err != nil && !errors.Is(err, migrate.ErrNoChange) {
 		return err
 	}
