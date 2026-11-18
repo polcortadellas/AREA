@@ -1,0 +1,5 @@
+bin/
+area
+*_test.go
+.golangci.yml
+Dockerfile
