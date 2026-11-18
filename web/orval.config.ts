@@ -18,7 +18,6 @@ export default defineConfig({
       httpClient: 'fetch',
       mock: true,
       clean: true,
-      prettier: true,
       override: {
         // Hooks return the response body directly instead of { data, status, headers }.
         fetch: { includeHttpResponseReturnType: false },
