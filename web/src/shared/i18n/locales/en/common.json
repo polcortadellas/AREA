@@ -24,5 +24,10 @@
     "title": "Something went wrong",
     "description": "An unexpected error occurred. Try reloading the page.",
     "reload": "Reload"
+  },
+  "validation": {
+    "required": "This field is required",
+    "email": "Enter a valid email address",
+    "minLength": "Too short"
   }
 }
