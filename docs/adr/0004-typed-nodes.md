@@ -9,7 +9,7 @@ Adding a service, Action or REAction must not change the execution engine, and i
 
 ## Decision
 
-Go interfaces `TriggerNode` (`ValidateConfig`, `OutputSchema`, `Poll`, `HandleWebhook`) and `ReactionNode` (`ValidateConfig`, `InputSchema`, `OutputSchema`, `Execute`), registered at start-up in a registry. `/about.json` and the workflow validator are generated from that registry.
+Go interfaces `TriggerNode` (`ValidateConfig`, `InputSchema`, `OutputSchema`, `Poll`, `HandleWebhook`) and `ReactionNode` (`ValidateConfig`, `InputSchema`, `OutputSchema`, `Execute`), registered at start-up in a registry (`server/internal/node`, wired in `server/internal/connectors`). Triggers also declare an `InputSchema` because they take parameters too (a GitHub repository, a temperature threshold) that the builder must render and `/about.json` must expose. `/about.json` and the workflow validator are generated from that registry.
 
 ## Alternatives considered
 

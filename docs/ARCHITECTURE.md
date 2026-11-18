@@ -95,7 +95,7 @@ The core system-level problem for AREA is how asynchronous workflow execution is
 
 ### Explicit Core Specifications & Edge-Case Semantics
 
-- **Typed Connector & Node Contracts:** Services implement ServiceConnector (Metadata()). Actions (triggers) implement TriggerNode (ValidateConfig(), OutputSchema(), Poll(ctx, cursor, auth), HandleWebhook(ctx, req)) because triggers detect events rather than execute side effects. REActions implement ReactionNode (ValidateConfig(), InputSchema(), OutputSchema(), Execute(ctx, inputs, auth)).
+- **Typed Connector & Node Contracts:** Services implement ServiceConnector (Metadata()). Actions (triggers) implement TriggerNode (ValidateConfig(), InputSchema(), OutputSchema(), Poll(ctx, config, cursor, auth), HandleWebhook(ctx, config, req)) because triggers detect events rather than execute side effects; their InputSchema() lists the parameters the user sets, such as a repository. REActions implement ReactionNode (ValidateConfig(), InputSchema(), OutputSchema(), Execute(ctx, inputs, auth)).
 
 - **Save-Time Key-Path Validation & Runtime Missing-Value Semantics:** Because every node declares its OutputSchema(), the workflow validator rejects any {{ node.key }} reference pointing to an undeclared key or non-ancestor node with HTTP 422 at save time. At runtime, if an optional declared key resolves to null/missing, string interpolation substitutes an empty string ''; if a required input parameter receives a missing value, the step fails with the non-retryable error MISSING_TEMPLATE_KEY and goes straight to the DLQ without retries, since retrying cannot make a missing key appear (raw {{...}} text is never rendered).
 
