@@ -26,7 +26,7 @@ Prettier settings are shared from the root [`.prettierrc.json`](.prettierrc.json
 
 ## Development
 
-Requirements: Go 1.25+, [golangci-lint](https://golangci-lint.run/welcome/install/) v2, Node.js 22.11+.
+Requirements: Go 1.25+, [golangci-lint](https://golangci-lint.run/welcome/install/) v2, [sqlc](https://docs.sqlc.dev/en/latest/overview/install.html) (only to run `make generate`), Node.js 22.11+.
 
 ```bash
 make install   # download Go modules and npm packages
