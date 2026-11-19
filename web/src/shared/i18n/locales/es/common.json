@@ -1,0 +1,33 @@
+{
+  "appName": "AREA",
+  "language": {
+    "label": "Idioma",
+    "en": "Inglés",
+    "es": "Español"
+  },
+  "layout": {
+    "skipToContent": "Saltar al contenido principal",
+    "mainNav": "Principal"
+  },
+  "nav": {
+    "dashboard": "Panel"
+  },
+  "dashboard": {
+    "title": "Tus flujos de trabajo"
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "description": "La página que buscas no existe.",
+    "back": "Volver al panel"
+  },
+  "error": {
+    "title": "Algo salió mal",
+    "description": "Se produjo un error inesperado. Intenta recargar la página.",
+    "reload": "Recargar"
+  },
+  "validation": {
+    "required": "Este campo es obligatorio",
+    "email": "Introduce un correo electrónico válido",
+    "minLength": "Demasiado corto"
+  }
+}
