@@ -43,7 +43,6 @@ func run() error {
 	case "api":
 		return runAPI(ctx, envOr("API_ADDR", ":8080"))
 	case "scheduler", "worker":
-		// Filled in by M-11 / M-12; for now the process just stays up.
 		<-ctx.Done()
 		return nil
 	default:
