@@ -10,7 +10,6 @@ import (
 
 const maxBody = 1 << 20
 
-// shortcut: validates only, nothing is saved until M-08 gives us the user_id.
 func CreateWorkflow(reg *node.Registry) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		r.Body = http.MaxBytesReader(w, r.Body, maxBody)
@@ -23,6 +22,6 @@ func CreateWorkflow(reg *node.Registry) http.HandlerFunc {
 			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 			return
 		}
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusOK)
 	}
 }
