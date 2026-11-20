@@ -1,0 +1,41 @@
+{
+  "appName": "AREA",
+  "language": {
+    "label": "Idioma",
+    "en": "Inglés",
+    "es": "Español"
+  },
+  "home": {
+    "title": "AREA",
+    "serverLabel": "Servidor",
+    "workflowsPlaceholder": "Tus flujos de trabajo aparecerán aquí.",
+    "openSettings": "Ajustes del servidor",
+    "retry": "Volver a comprobar"
+  },
+  "settings": {
+    "title": "Ajustes",
+    "serverSection": "Servidor",
+    "serverIntro": "Introduce la dirección de tu servidor AREA. En el emulador de Android, usa http://10.0.2.2:8080 para acceder a un servidor que se ejecuta en tu ordenador.",
+    "serverUrlLabel": "Dirección del servidor",
+    "serverUrlHint": "Por ejemplo http://192.168.1.20:8080",
+    "test": "Probar conexión",
+    "save": "Guardar",
+    "saved": "Dirección del servidor guardada.",
+    "saveFailed": "No se pudo guardar la dirección del servidor en este dispositivo.",
+    "languageSection": "Idioma"
+  },
+  "connection": {
+    "checking": "Comprobando la conexión…",
+    "ok": "Conectado al servidor.",
+    "timeout": "El servidor no respondió a tiempo. Comprueba la dirección y que el teléfono esté en la misma red.",
+    "network": "No se pudo contactar con el servidor. Comprueba la dirección y que el servidor esté en marcha.",
+    "http": "El servidor respondió con un error (HTTP {{status}}).",
+    "notArea": "Esta dirección respondió, pero no es un servidor AREA."
+  },
+  "validation": {
+    "required": "Introduce la dirección del servidor.",
+    "scheme": "La dirección debe empezar por http:// o https://.",
+    "host": "Introduce un nombre de host o una dirección IP válidos.",
+    "port": "El puerto debe ser un número entre 1 y 65535."
+  }
+}

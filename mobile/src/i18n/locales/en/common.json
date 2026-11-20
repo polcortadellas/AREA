@@ -1,0 +1,41 @@
+{
+  "appName": "AREA",
+  "language": {
+    "label": "Language",
+    "en": "English",
+    "es": "Spanish"
+  },
+  "home": {
+    "title": "AREA",
+    "serverLabel": "Server",
+    "workflowsPlaceholder": "Your workflows will appear here.",
+    "openSettings": "Server settings",
+    "retry": "Check again"
+  },
+  "settings": {
+    "title": "Settings",
+    "serverSection": "Server",
+    "serverIntro": "Enter the address of your AREA server. On the Android emulator, use http://10.0.2.2:8080 to reach a server running on your computer.",
+    "serverUrlLabel": "Server address",
+    "serverUrlHint": "For example http://192.168.1.20:8080",
+    "test": "Test connection",
+    "save": "Save",
+    "saved": "Server address saved.",
+    "saveFailed": "Could not save the server address on this device.",
+    "languageSection": "Language"
+  },
+  "connection": {
+    "checking": "Checking connection…",
+    "ok": "Connected to the server.",
+    "timeout": "The server did not answer in time. Check the address and that your phone is on the same network.",
+    "network": "Could not reach the server. Check the address and that the server is running.",
+    "http": "The server answered with an error (HTTP {{status}}).",
+    "notArea": "This address answered, but it is not an AREA server."
+  },
+  "validation": {
+    "required": "Enter the server address.",
+    "scheme": "The address must start with http:// or https://.",
+    "host": "Enter a valid host name or IP address.",
+    "port": "The port must be a number between 1 and 65535."
+  }
+}
