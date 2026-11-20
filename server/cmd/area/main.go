@@ -20,7 +20,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/polcortadellas/AREA/server/internal/api"
+	"github.com/polcortadellas/AREA/server/internal/connectors"
 	"github.com/polcortadellas/AREA/server/internal/db"
+	"github.com/polcortadellas/AREA/server/internal/node"
 )
 
 func main() {
@@ -59,11 +62,14 @@ func runAPI(ctx context.Context, addr string) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 
+	registry := node.NewRegistry()
+	connectors.Register(registry)
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
 	})
+	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
 
 	srv := &http.Server{
 		Addr:              addr,
