@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  AREA is self-hosted: the user types the address of their own server, which on
+  a LAN or the emulator (10.0.2.2) is usually plain http://<ip>:8080. Release
+  builds would otherwise block cleartext HTTP (the React Native Gradle plugin
+  forces usesCleartextTraffic=false on release), so it is allowed here.
+  Use an https:// address in production.
+-->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
