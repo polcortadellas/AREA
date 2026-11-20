@@ -1,0 +1,218 @@
+package node
+
+import (
+	"errors"
+	"fmt"
+	"maps"
+	"regexp"
+	"slices"
+	"strings"
+)
+
+const (
+	KindTrigger   = "trigger"
+	KindReaction  = "reaction"
+	KindCondition = "condition"
+)
+
+type WorkflowNode struct {
+	ID     string `json:"id"`
+	Kind   string `json:"kind"`
+	Type   string `json:"type"`
+	Config Values `json:"config"`
+}
+
+type Edge struct {
+	From   string `json:"from"`
+	To     string `json:"to"`
+	Branch string `json:"branch,omitempty"`
+}
+
+type Workflow struct {
+	Nodes []WorkflowNode `json:"nodes"`
+	Edges []Edge         `json:"edges"`
+}
+
+var ErrInvalidWorkflow = errors.New("invalid workflow")
+
+var refRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
+
+// One parent per node keeps the graph a tree: branches cannot reconverge.
+func (r *Registry) ValidateWorkflow(w Workflow) error {
+	var problems []string
+	bad := func(format string, args ...any) {
+		problems = append(problems, fmt.Sprintf(format, args...))
+	}
+
+	nodes := make(map[string]WorkflowNode, len(w.Nodes))
+	var triggerID string
+	conditions := 0
+	for _, n := range w.Nodes {
+		if n.ID == "" || n.ID == "trigger" {
+			bad("node id %q is not allowed", n.ID)
+			continue
+		}
+		if _, dup := nodes[n.ID]; dup {
+			bad("node %q appears twice", n.ID)
+			continue
+		}
+		nodes[n.ID] = n
+
+		switch n.Kind {
+		case KindTrigger:
+			if triggerID != "" {
+				bad("a workflow has exactly one trigger")
+			}
+			triggerID = n.ID
+			if t, ok := r.Trigger(n.Type); !ok {
+				bad("node %q: unknown trigger %q", n.ID, n.Type)
+			} else if err := t.ValidateConfig(n.Config); err != nil {
+				bad("node %q: %v", n.ID, err)
+			}
+		case KindReaction:
+			if re, ok := r.Reaction(n.Type); !ok {
+				bad("node %q: unknown reaction %q", n.ID, n.Type)
+			} else if err := re.ValidateConfig(n.Config); err != nil {
+				bad("node %q: %v", n.ID, err)
+			}
+		case KindCondition:
+			conditions++
+			// shortcut: condition config is only checked for {{ }} refs, add its own schema when M-12 defines the operators.
+		default:
+			bad("node %q: unknown kind %q", n.ID, n.Kind)
+		}
+	}
+	if triggerID == "" {
+		bad("a workflow needs a trigger")
+	}
+	if conditions > 1 {
+		bad("a workflow has at most one condition, found %d", conditions)
+	}
+
+	parent := make(map[string]string, len(w.Nodes))
+	children := make(map[string][]string, len(w.Nodes))
+	branches := make(map[string]map[string]bool)
+	for _, e := range w.Edges {
+		from, okFrom := nodes[e.From]
+		_, okTo := nodes[e.To]
+		if !okFrom || !okTo {
+			bad("edge %s -> %s points to a missing node", e.From, e.To)
+			continue
+		}
+		switch {
+		case e.To == triggerID:
+			bad("edge %s -> %s: nothing can point to the trigger", e.From, e.To)
+			continue
+		case from.Kind == KindCondition && e.Branch != "true" && e.Branch != "false":
+			bad("edge %s -> %s: an edge leaving a condition needs branch \"true\" or \"false\"", e.From, e.To)
+			continue
+		case from.Kind != KindCondition && e.Branch != "":
+			bad("edge %s -> %s: only a condition has branches", e.From, e.To)
+			continue
+		}
+		if _, has := parent[e.To]; has {
+			bad("node %q has several incoming edges: branches cannot reconverge", e.To)
+			continue
+		}
+		if from.Kind == KindCondition {
+			if branches[e.From] == nil {
+				branches[e.From] = map[string]bool{}
+			}
+			if branches[e.From][e.Branch] {
+				bad("condition %q: branch %q has more than one edge", e.From, e.Branch)
+				continue
+			}
+			branches[e.From][e.Branch] = true
+		}
+		parent[e.To] = e.From
+		children[e.From] = append(children[e.From], e.To)
+	}
+
+	for _, n := range w.Nodes {
+		if n.Kind == KindCondition {
+			for _, b := range []string{"true", "false"} {
+				if !branches[n.ID][b] {
+					bad("condition %q: branch %q is empty", n.ID, b)
+				}
+			}
+		}
+	}
+
+	reached := map[string]bool{}
+	stack := []string{triggerID}
+	for len(stack) > 0 {
+		id := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if id == "" || reached[id] {
+			continue
+		}
+		reached[id] = true
+		stack = append(stack, children[id]...)
+	}
+	for _, n := range w.Nodes {
+		if !reached[n.ID] {
+			bad("node %q is not connected to the trigger", n.ID)
+			continue
+		}
+		for _, p := range r.checkRefs(n, parent, nodes, triggerID) {
+			bad("node %q: %s", n.ID, p)
+		}
+	}
+
+	if len(problems) == 0 {
+		return nil
+	}
+	return fmt.Errorf("%w: %s", ErrInvalidWorkflow, strings.Join(problems, "; "))
+}
+
+func (r *Registry) checkRefs(n WorkflowNode, parent map[string]string, nodes map[string]WorkflowNode, triggerID string) []string {
+	var problems []string
+	for _, key := range slices.Sorted(maps.Keys(n.Config)) {
+		s, ok := n.Config[key].(string)
+		if !ok {
+			continue
+		}
+		if strings.Contains(refRe.ReplaceAllString(s, ""), "{{") {
+			problems = append(problems, fmt.Sprintf("%q has a malformed {{ node.key }} reference", key))
+		}
+		for _, m := range refRe.FindAllStringSubmatch(s, -1) {
+			ref, field := m[1], m[2]
+			if ref == "trigger" {
+				ref = triggerID
+			}
+			if !isAncestor(ref, n.ID, parent) {
+				problems = append(problems, fmt.Sprintf("%q: {{ %s.%s }} must point to a node that runs before this one", key, m[1], field))
+				continue
+			}
+			if _, ok := r.outputSchema(nodes[ref]).Lookup(field); !ok {
+				problems = append(problems, fmt.Sprintf("%q: node %q does not declare output %q", key, m[1], field))
+			}
+		}
+	}
+	return problems
+}
+
+func isAncestor(ref, id string, parent map[string]string) bool {
+	seen := map[string]bool{}
+	for p, ok := parent[id]; ok && !seen[p]; p, ok = parent[p] {
+		if p == ref {
+			return true
+		}
+		seen[p] = true
+	}
+	return false
+}
+
+func (r *Registry) outputSchema(n WorkflowNode) Schema {
+	switch n.Kind {
+	case KindTrigger:
+		if t, ok := r.Trigger(n.Type); ok {
+			return t.OutputSchema()
+		}
+	case KindReaction:
+		if re, ok := r.Reaction(n.Type); ok {
+			return re.OutputSchema()
+		}
+	}
+	return nil
+}
