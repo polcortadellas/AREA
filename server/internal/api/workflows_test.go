@@ -22,7 +22,7 @@ func TestCreateWorkflow(t *testing.T) {
 	}{
 		"valid": {`{"nodes":[{"id":"t","kind":"trigger","type":"dummy.counter"},
 			{"id":"a","kind":"reaction","type":"dummy.echo","config":{"message":"{{ t.count }}"}}],
-			"edges":[{"from":"t","to":"a"}]}`, http.StatusCreated},
+			"edges":[{"from":"t","to":"a"}]}`, http.StatusOK},
 		"undeclared key": {`{"nodes":[{"id":"t","kind":"trigger","type":"dummy.counter"},
 			{"id":"a","kind":"reaction","type":"dummy.echo","config":{"message":"{{ t.nope }}"}}],
 			"edges":[{"from":"t","to":"a"}]}`, http.StatusUnprocessableEntity},
