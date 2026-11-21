@@ -31,7 +31,6 @@ func NewTokens(secret string, ttl time.Duration) (*Tokens, error) {
 	return &Tokens{secret: []byte(secret), ttl: ttl, now: time.Now}, nil
 }
 
-// Issue signs an HS256 access token for userID.
 func (t *Tokens) Issue(userID uuid.UUID) (string, time.Duration, error) {
 	now := t.now()
 	claims := jwt.RegisteredClaims{

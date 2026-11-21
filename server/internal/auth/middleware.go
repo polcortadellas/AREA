@@ -28,7 +28,6 @@ func (t *Tokens) RequireAuth(next http.Handler) http.Handler {
 	})
 }
 
-// UserID returns the authenticated user set by RequireAuth.
 func UserID(ctx context.Context) (uuid.UUID, bool) {
 	id, ok := ctx.Value(ctxKey{}).(uuid.UUID)
 	return id, ok
