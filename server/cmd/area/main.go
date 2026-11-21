@@ -23,9 +23,12 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/polcortadellas/AREA/server/internal/api"
 	"github.com/polcortadellas/AREA/server/internal/auth"
+	"github.com/polcortadellas/AREA/server/internal/connectors"
 	"github.com/polcortadellas/AREA/server/internal/db"
 	"github.com/polcortadellas/AREA/server/internal/mail"
+	"github.com/polcortadellas/AREA/server/internal/node"
 )
 
 func main() {
@@ -48,7 +51,6 @@ func run() error {
 	case "api":
 		return runAPI(ctx, envOr("API_ADDR", ":8080"))
 	case "scheduler", "worker":
-		// Filled in by M-11 / M-12; for now the process just stays up.
 		<-ctx.Done()
 		return nil
 	default:
@@ -88,12 +90,16 @@ func runAPI(ctx context.Context, addr string) error {
 		return err
 	}
 
+	registry := node.NewRegistry()
+	connectors.Register(registry)
+
 	mux := http.NewServeMux()
 	authSvc.Routes(mux)
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
 	})
+	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
 
 	srv := &http.Server{
 		Addr:              addr,
