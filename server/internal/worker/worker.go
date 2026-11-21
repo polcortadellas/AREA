@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 
@@ -29,14 +30,28 @@ type ExecutorFunc func(ctx context.Context, runID uuid.UUID) error
 func (f ExecutorFunc) Execute(ctx context.Context, runID uuid.UUID) error { return f(ctx, runID) }
 
 type Worker struct {
+	// SweepEvery is how often stale PENDING runs are re-enqueued and idle messages reclaimed.
+	SweepEvery time.Duration
+	// StaleAfter is how long a PENDING run or an unacknowledged message waits before recovery.
+	StaleAfter time.Duration
+
 	pool  *pgxpool.Pool
 	redis *redis.Client
+	queue *queue.Streams
 	exec  Executor
 	name  string
 }
 
 func New(pool *pgxpool.Pool, rdb *redis.Client, exec Executor, name string) *Worker {
-	return &Worker{pool: pool, redis: rdb, exec: exec, name: name}
+	return &Worker{
+		SweepEvery: 30 * time.Second,
+		StaleAfter: 30 * time.Second,
+		pool:       pool,
+		redis:      rdb,
+		queue:      queue.NewStreams(rdb),
+		exec:       exec,
+		name:       name,
+	}
 }
 
 // Run blocks until ctx is cancelled; runs in flight finish first.
@@ -50,6 +65,11 @@ func (w *Worker) Run(ctx context.Context, concurrency int) error {
 	}
 
 	var wg sync.WaitGroup
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		w.recover(ctx)
+	}()
 	for i := range concurrency {
 		wg.Add(1)
 		go func() {
@@ -68,7 +88,7 @@ func (w *Worker) consume(ctx context.Context, consumer string) {
 			Consumer: consumer,
 			Streams:  []string{queue.Stream, ">"},
 			Count:    1,
-			Block:    5 * time.Second,
+			Block:    time.Second,
 		}).Result()
 		if errors.Is(err, redis.Nil) {
 			continue
@@ -143,5 +163,69 @@ func (w *Worker) finish(ctx context.Context, runID uuid.UUID, status, errText st
 func (w *Worker) ack(ctx context.Context, id string) {
 	if err := w.redis.XAck(ctx, queue.Stream, Group, id).Err(); err != nil {
 		slog.Error("worker: ack", "message", id, "err", err)
+	}
+}
+
+func (w *Worker) recover(ctx context.Context) {
+	ticker := time.NewTicker(w.SweepEvery)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			w.sweep(ctx)
+			w.reclaim(ctx)
+		}
+	}
+}
+
+// sweep publishes again the runs stored as PENDING that never reached a worker,
+// e.g. because the api crashed between the commit and the XADD.
+// shortcut: it re-enqueues every stale PENDING run on each pass, so a long outage
+// leaves duplicate messages that the claim drops; capped at 100 per pass.
+func (w *Worker) sweep(ctx context.Context) {
+	rows, err := w.pool.Query(ctx,
+		`SELECT id FROM runs WHERE status = 'PENDING' AND created_at < now() - make_interval(secs => $1) LIMIT 100`,
+		w.StaleAfter.Seconds())
+	if err != nil {
+		slog.Error("worker: sweep", "err", err)
+		return
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		slog.Error("worker: sweep", "err", err)
+		return
+	}
+	for _, id := range ids {
+		if err := w.queue.Enqueue(ctx, id); err != nil {
+			slog.Error("worker: sweep enqueue", "run", id, "err", err)
+		}
+	}
+}
+
+// reclaim takes over messages whose consumer stopped before acknowledging them.
+func (w *Worker) reclaim(ctx context.Context) {
+	start := "0-0"
+	for ctx.Err() == nil {
+		msgs, next, err := w.redis.XAutoClaim(ctx, &redis.XAutoClaimArgs{
+			Stream:   queue.Stream,
+			Group:    Group,
+			Consumer: w.name + "-reclaim",
+			MinIdle:  w.StaleAfter,
+			Start:    start,
+			Count:    100,
+		}).Result()
+		if err != nil {
+			slog.Error("worker: reclaim", "err", err)
+			return
+		}
+		for _, msg := range msgs {
+			w.handle(ctx, msg)
+		}
+		if next == "0-0" || len(msgs) == 0 {
+			return
+		}
+		start = next
 	}
 }

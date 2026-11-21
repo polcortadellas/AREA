@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -185,5 +186,86 @@ func TestRunRejectsZeroConcurrency(t *testing.T) {
 	pool, rdb := environment(t)
 	if err := worker.New(pool, rdb, &counter{runs: map[uuid.UUID]int{}}, "test").Run(t.Context(), 0); err == nil {
 		t.Fatal("expected an error for concurrency 0")
+	}
+}
+
+func waitSucceeded(t *testing.T, pool *pgxpool.Pool, ids []uuid.UUID) {
+	t.Helper()
+	deadline := time.Now().Add(15 * time.Second)
+	for _, id := range ids {
+		for statusOf(t, pool, id) != "SUCCEEDED" {
+			if time.Now().After(deadline) {
+				t.Fatalf("run %s never finished (status %s)", id, statusOf(t, pool, id))
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+}
+
+func startFast(t *testing.T, pool *pgxpool.Pool, rdb *redis.Client, exec worker.Executor) (stop func()) {
+	t.Helper()
+	w := worker.New(pool, rdb, exec, "test")
+	w.SweepEvery, w.StaleAfter = 200*time.Millisecond, 500*time.Millisecond
+	ctx, cancel := context.WithCancel(t.Context())
+	done := make(chan error, 1)
+	go func() { done <- w.Run(ctx, 2) }()
+	return func() {
+		cancel()
+		if err := <-done; err != nil {
+			t.Fatalf("run: %v", err)
+		}
+	}
+}
+
+func TestSweepEnqueuesStalePendingRuns(t *testing.T) {
+	pool, rdb := environment(t)
+	ids := pendingRuns(t, pool, 3) // stored but never published, as after an api crash
+	if _, err := pool.Exec(t.Context(), `UPDATE runs SET created_at = now() - interval '1 minute'`); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &counter{runs: map[uuid.UUID]int{}}
+	stop := startFast(t, pool, rdb, exec)
+	waitSucceeded(t, pool, ids)
+	time.Sleep(time.Second) // more sweeps pass; none may run a run again
+	stop()
+
+	for _, id := range ids {
+		if n := exec.count(id); n != 1 {
+			t.Fatalf("run %s executed %d times, want 1", id, n)
+		}
+	}
+}
+
+func TestReclaimsMessagesOfADeadConsumer(t *testing.T) {
+	pool, rdb := environment(t)
+	ids := pendingRuns(t, pool, 2)
+
+	err := rdb.XGroupCreateMkStream(t.Context(), queue.Stream, worker.Group, "0").Err()
+	if err != nil && !strings.HasPrefix(err.Error(), "BUSYGROUP") {
+		t.Fatal(err)
+	}
+	q := queue.NewStreams(rdb)
+	for _, id := range ids {
+		if err := q.Enqueue(t.Context(), id); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// A consumer reads the messages and dies before acknowledging them.
+	if err := rdb.XReadGroup(t.Context(), &redis.XReadGroupArgs{
+		Group: worker.Group, Consumer: "dead", Streams: []string{queue.Stream, ">"}, Count: 100,
+	}).Err(); err != nil {
+		t.Fatal(err)
+	}
+
+	exec := &counter{runs: map[uuid.UUID]int{}}
+	stop := startFast(t, pool, rdb, exec)
+	waitSucceeded(t, pool, ids)
+	stop()
+
+	for _, id := range ids {
+		if n := exec.count(id); n != 1 {
+			t.Fatalf("run %s executed %d times, want 1", id, n)
+		}
 	}
 }
