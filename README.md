@@ -70,7 +70,10 @@ make down   # stop the stack (data volumes are kept)
 ## Testing
 
 ```bash
-# Add the command to run the tests here
+# Server tests need a throwaway PostgreSQL and Redis; without them those tests are skipped.
+cd server && DATABASE_URL=postgres://user:pass@localhost:5432/postgres?sslmode=disable \
+  REDIS_URL=redis://localhost:6379/0 go test -race ./...
+make lint   # lint of the server, web, mobile and the OpenAPI contract
 ```
 
 ## License
