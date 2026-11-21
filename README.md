@@ -54,6 +54,7 @@ The first build takes a while: the Android APK is compiled inside Docker (on App
 | What | Where |
 |---|---|
 | API | http://localhost:8080 (`GET /ping` answers `pong`) |
+| Services, actions and reactions | http://localhost:8080/about.json |
 | API documentation (Swagger UI) | http://localhost:8080/docs (raw contract: `/openapi.yaml`) |
 | Web client | http://localhost:8081 |
 | Mailpit (inbox for confirmation e-mails) | http://localhost:8025 |
