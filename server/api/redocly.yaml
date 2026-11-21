@@ -1,0 +1,6 @@
+extends:
+  - recommended
+
+rules:
+  # No licence chosen for the project yet.
+  info-license: off

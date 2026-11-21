@@ -47,6 +47,11 @@ jobs:
         with:
           version: v2.15.0
           working-directory: server
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Lint OpenAPI
+        run: make -C .. lint-api
       - name: Test
         run: go test -race ./...
 

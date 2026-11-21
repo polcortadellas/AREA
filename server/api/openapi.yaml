@@ -1,0 +1,907 @@
+openapi: 3.0.3
+info:
+  title: AREA API
+  version: 0.1.0
+  description: |
+    HTTP API of the AREA server, used by the web and Android clients.
+
+    Errors have the body `{"error": "<code>"}`. Any route can also answer
+    `500 {"error": "internal_error"}`.
+
+    Routes marked **Planned** are part of the MVP contract but not implemented
+    yet; their description names the task that adds them.
+servers:
+  - url: /
+    description: The server that serves this document
+security:
+  - bearerAuth: []
+tags:
+  - name: system
+    description: Health check and service discovery.
+  - name: auth
+    description: Local accounts with e-mail confirmation (M-08).
+  - name: services
+    description: Linking third-party accounts with OAuth2 (M-14).
+  - name: workflows
+    description: Workflows are graphs of one trigger, at most one condition and reactions (M-10).
+  - name: runs
+    description: Execution history of a workflow (M-12, M-21).
+
+paths:
+  /ping:
+    get:
+      tags: [system]
+      operationId: ping
+      summary: Check that the API is up
+      security: []
+      responses:
+        "200":
+          description: The API is up.
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "pong\n"
+
+  /about.json:
+    get:
+      tags: [system]
+      operationId: getAbout
+      summary: List the services, actions and reactions
+      description: |
+        Generated from the node registry, so a new connector appears here
+        without editing this route. Follows the format of the subject and adds
+        the inputs and outputs of each node. **Planned (M-06).**
+      security: []
+      responses:
+        "200":
+          description: Services known by the server.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/About"
+
+  /auth/register:
+    post:
+      tags: [auth]
+      operationId: register
+      summary: Create a local account
+      description: |
+        Sends a confirmation e-mail. Always answers 202, even if the e-mail is
+        already registered, so it cannot be used to find accounts.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "202":
+          description: Confirmation e-mail sent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RegisterAccepted"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /auth/verify-email:
+    post:
+      tags: [auth]
+      operationId: verifyEmail
+      summary: Confirm an e-mail address
+      description: |
+        Uses the one-time token from the confirmation e-mail (valid 24 h) and
+        logs the user in. Error code `invalid_token` if it is unknown, used or
+        expired.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/Token"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Log in with e-mail and password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Credentials"
+      responses:
+        "200":
+          $ref: "#/components/responses/Token"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          description: Wrong e-mail or password (`invalid_credentials`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Correct password but the e-mail is not confirmed yet (`email_not_verified`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/me:
+    get:
+      tags: [auth]
+      operationId: getMe
+      summary: Get the logged-in user
+      responses:
+        "200":
+          description: The user of the access token.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /services:
+    get:
+      tags: [services]
+      operationId: listServices
+      summary: List the services linked to the user
+      description: "**Planned (M-14).**"
+      responses:
+        "200":
+          description: Linked services.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LinkedService"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /services/{service}/authorize:
+    post:
+      tags: [services]
+      operationId: authorizeService
+      summary: Start linking a service
+      description: |
+        Returns the provider's consent page. The client opens it in the
+        browser; the provider then redirects to the callback route.
+        **Planned (M-14).**
+      parameters:
+        - $ref: "#/components/parameters/Service"
+      responses:
+        "200":
+          description: URL of the provider's consent page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthorizeUrl"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /services/{service}/callback:
+    get:
+      tags: [services]
+      operationId: serviceCallback
+      summary: OAuth2 callback of the provider
+      description: |
+        Called by the browser after the consent page, not by the clients.
+        Stores the tokens (encrypted) and redirects to the web client.
+        **Planned (M-14).**
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Service"
+        - name: code
+          in: query
+          description: Authorization code, absent if the user refused.
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          description: Value sent in the consent URL, checked against the user.
+          schema:
+            type: string
+        - name: error
+          in: query
+          description: Set by the provider if the user refused.
+          schema:
+            type: string
+      responses:
+        "302":
+          description: Redirect to the services page of the web client, with `?linked=<service>` or `?error=<code>`.
+          headers:
+            Location:
+              schema:
+                type: string
+        "400":
+          description: Missing, unknown or expired `state` (`invalid_state`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /services/{service}:
+    delete:
+      tags: [services]
+      operationId: unlinkService
+      summary: Unlink a service
+      description: Deletes the stored tokens. **Planned (M-14).**
+      parameters:
+        - $ref: "#/components/parameters/Service"
+      responses:
+        "204":
+          description: Unlinked.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /workflows:
+    get:
+      tags: [workflows]
+      operationId: listWorkflows
+      summary: List the user's workflows
+      description: "**Planned (M-21).**"
+      responses:
+        "200":
+          description: Workflows, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WorkflowSummary"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+    post:
+      tags: [workflows]
+      operationId: createWorkflow
+      summary: Create a workflow
+      description: |
+        The graph is validated before saving (M-10): one trigger, at most one
+        condition with two non-empty branches, no reconverging branches, and
+        every `{{ node.key }}` must point to an output declared by an earlier
+        node.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowInput"
+            example:
+              name: Echo every count
+              nodes:
+                - id: start
+                  kind: trigger
+                  type: dummy.counter
+                  config: {}
+                - id: echo
+                  kind: reaction
+                  type: dummy.echo
+                  config:
+                    message: "Event {{ trigger.count }}"
+              edges:
+                - from: start
+                  to: echo
+      responses:
+        "201":
+          description: Created.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/InvalidWorkflow"
+
+  /workflows/{workflowId}:
+    parameters:
+      - $ref: "#/components/parameters/WorkflowId"
+    get:
+      tags: [workflows]
+      operationId: getWorkflow
+      summary: Get a workflow
+      description: "**Planned (M-20).**"
+      responses:
+        "200":
+          description: The workflow.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    put:
+      tags: [workflows]
+      operationId: replaceWorkflow
+      summary: Replace a workflow
+      description: Same validation as creation. **Planned (M-20).**
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowInput"
+      responses:
+        "200":
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/InvalidWorkflow"
+    patch:
+      tags: [workflows]
+      operationId: updateWorkflow
+      summary: Rename, pause or resume a workflow
+      description: A paused workflow is not polled and starts no runs. **Planned (M-21).**
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WorkflowPatch"
+      responses:
+        "200":
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Workflow"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [workflows]
+      operationId: deleteWorkflow
+      summary: Delete a workflow and its runs
+      description: "**Planned (M-21).**"
+      responses:
+        "204":
+          description: Deleted.
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /workflows/{workflowId}/runs:
+    get:
+      tags: [runs]
+      operationId: listRuns
+      summary: List the runs of a workflow
+      description: "**Planned (M-21).**"
+      parameters:
+        - $ref: "#/components/parameters/WorkflowId"
+        - name: limit
+          in: query
+          description: Maximum number of runs, newest first.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        "200":
+          description: Runs, newest first.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Run"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /runs/{runId}:
+    get:
+      tags: [runs]
+      operationId: getRun
+      summary: Get a run and its steps
+      description: "**Planned (M-21).**"
+      parameters:
+        - name: runId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The run with one step per executed or skipped node.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token from `/auth/login` or `/auth/verify-email`.
+
+  parameters:
+    Service:
+      name: service
+      in: path
+      required: true
+      description: Service name, as in `/about.json`.
+      schema:
+        type: string
+        pattern: "^[a-z][a-z0-9_]*$"
+        example: github
+    WorkflowId:
+      name: workflowId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Token:
+      description: Logged in.
+      headers:
+        Cache-Control:
+          schema:
+            type: string
+            example: no-store
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Token"
+    BadRequest:
+      description: |
+        The body is not valid JSON or has unknown fields (`invalid_body`), or
+        a value is rejected, e.g. `invalid_email`, `weak_password`.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    Unauthorized:
+      description: Missing, invalid or expired access token (`unauthorized`).
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+            example: Bearer realm="area"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    NotFound:
+      description: |
+        Does not exist or belongs to another user (`not_found`), so other
+        users' IDs cannot be discovered.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    InvalidWorkflow:
+      description: The graph is rejected; nothing is saved.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/WorkflowValidationError"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Machine-readable code.
+          example: invalid_body
+
+    WorkflowValidationError:
+      type: object
+      required: [error, problems]
+      properties:
+        error:
+          type: string
+          enum: [invalid_workflow]
+        problems:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/WorkflowProblem"
+
+    WorkflowProblem:
+      type: object
+      required: [message]
+      properties:
+        node:
+          type: string
+          description: ID of the node at fault; absent when the problem is about the whole graph.
+          example: echo
+        message:
+          type: string
+          example: '"message": node "start" does not declare output "title"'
+
+    About:
+      type: object
+      required: [client, server]
+      properties:
+        client:
+          type: object
+          required: [host]
+          properties:
+            host:
+              type: string
+              description: IP address of the client that made the request.
+              example: 10.101.53.35
+        server:
+          type: object
+          required: [current_time, services]
+          properties:
+            current_time:
+              type: integer
+              format: int64
+              description: Unix time in seconds.
+              example: 1795217823
+            services:
+              type: array
+              items:
+                $ref: "#/components/schemas/AboutService"
+
+    AboutService:
+      type: object
+      required: [name, description, oauth2, actions, reactions]
+      properties:
+        name:
+          type: string
+          example: github
+        description:
+          type: string
+        oauth2:
+          type: boolean
+          description: The user must link the service (`/services/{service}/authorize`) before using it.
+        actions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AboutNode"
+        reactions:
+          type: array
+          items:
+            $ref: "#/components/schemas/AboutNode"
+
+    AboutNode:
+      type: object
+      required: [name, type, description, inputs, outputs]
+      properties:
+        name:
+          type: string
+          example: new_issue
+        type:
+          type: string
+          description: Value for `type` in a workflow node.
+          example: github.new_issue
+        description:
+          type: string
+        inputs:
+          type: array
+          description: Config fields, in the order a form shows them.
+          items:
+            $ref: "#/components/schemas/Field"
+        outputs:
+          type: array
+          description: Keys that later nodes can use as `{{ node.key }}`.
+          items:
+            $ref: "#/components/schemas/Field"
+
+    Field:
+      type: object
+      required: [key, type, required, description]
+      properties:
+        key:
+          type: string
+          pattern: "^[a-z][a-z0-9_]*$"
+          example: title
+        type:
+          type: string
+          enum: [string, number, boolean]
+        required:
+          type: boolean
+        description:
+          type: string
+
+    Credentials:
+      type: object
+      additionalProperties: false
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+          maxLength: 128
+
+    RegisterAccepted:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [verification_email_sent]
+
+    VerifyEmailRequest:
+      type: object
+      additionalProperties: false
+      required: [token]
+      properties:
+        token:
+          type: string
+          description: Token from the link of the confirmation e-mail.
+
+    Token:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: "JWT to send as `Authorization: Bearer <token>`."
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Seconds until the token expires.
+          example: 3600
+
+    User:
+      type: object
+      required: [id, email]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+
+    LinkedService:
+      type: object
+      required: [service, scopes, linked_at]
+      properties:
+        service:
+          type: string
+          example: github
+        scopes:
+          type: string
+          description: Scopes granted by the provider, space-separated.
+          example: repo read:user
+        linked_at:
+          type: string
+          format: date-time
+
+    AuthorizeUrl:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+
+    ConfigValue:
+      oneOf:
+        - type: string
+        - type: number
+        - type: boolean
+
+    WorkflowNode:
+      type: object
+      required: [id, kind, type, config]
+      properties:
+        id:
+          type: string
+          description: |
+            Unique in the workflow; edges and `{{ id.key }}` references use it.
+            `trigger` is reserved: `{{ trigger.key }}` always points to the
+            trigger.
+          example: echo
+        kind:
+          type: string
+          enum: [trigger, reaction, condition]
+        type:
+          type: string
+          description: Node type from `/about.json`.
+          example: dummy.echo
+        config:
+          type: object
+          description: Values of the node's inputs. Strings may contain `{{ node.key }}` references.
+          additionalProperties:
+            $ref: "#/components/schemas/ConfigValue"
+
+    Edge:
+      type: object
+      required: [from, to]
+      properties:
+        from:
+          type: string
+        to:
+          type: string
+        branch:
+          type: string
+          enum: ["true", "false"]
+          description: Only on the two edges that leave a condition.
+
+    WorkflowInput:
+      type: object
+      required: [name, nodes, edges]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        enabled:
+          type: boolean
+          default: true
+        nodes:
+          type: array
+          minItems: 1
+          items:
+            $ref: "#/components/schemas/WorkflowNode"
+        edges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Edge"
+
+    WorkflowPatch:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        enabled:
+          type: boolean
+
+    WorkflowSummary:
+      type: object
+      required: [id, name, enabled, created_at, updated_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        enabled:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    Workflow:
+      allOf:
+        - $ref: "#/components/schemas/WorkflowSummary"
+        - type: object
+          required: [nodes, edges]
+          properties:
+            nodes:
+              type: array
+              items:
+                $ref: "#/components/schemas/WorkflowNode"
+            edges:
+              type: array
+              items:
+                $ref: "#/components/schemas/Edge"
+
+    Run:
+      type: object
+      required: [id, workflow_id, status, trigger_payload, error, created_at, started_at, finished_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        workflow_id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [PENDING, RUNNING, SUCCEEDED, FAILED, DEAD]
+          description: "`DEAD`: failed too many times and will not be retried."
+        trigger_payload:
+          type: object
+          description: Outputs of the trigger event.
+          additionalProperties: true
+        error:
+          type: string
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RunStep:
+      type: object
+      required: [node_id, status, attempt, output, error, started_at, finished_at]
+      properties:
+        node_id:
+          type: string
+          description: ID of the node in the workflow.
+        status:
+          type: string
+          enum: [PENDING, RUNNING, SUCCEEDED, FAILED, SKIPPED]
+          description: "`SKIPPED`: on the branch of the condition that was not taken."
+        attempt:
+          type: integer
+        output:
+          type: object
+          nullable: true
+          additionalProperties: true
+        error:
+          type: string
+          nullable: true
+        started_at:
+          type: string
+          format: date-time
+          nullable: true
+        finished_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    RunDetail:
+      allOf:
+        - $ref: "#/components/schemas/Run"
+        - type: object
+          required: [steps]
+          properties:
+            steps:
+              type: array
+              items:
+                $ref: "#/components/schemas/RunStep"
