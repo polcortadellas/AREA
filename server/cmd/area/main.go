@@ -14,15 +14,20 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
+
 	"github.com/polcortadellas/AREA/server/internal/api"
+	"github.com/polcortadellas/AREA/server/internal/auth"
 	"github.com/polcortadellas/AREA/server/internal/connectors"
 	"github.com/polcortadellas/AREA/server/internal/db"
+	"github.com/polcortadellas/AREA/server/internal/mail"
 	"github.com/polcortadellas/AREA/server/internal/node"
 )
 
@@ -62,14 +67,41 @@ func runAPI(ctx context.Context, addr string) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
+
+	jwtTTL, err := time.ParseDuration(envOr("JWT_TTL", "1h"))
+	if err != nil {
+		return fmt.Errorf("JWT_TTL: %w", err)
+	}
+	tokens, err := auth.NewTokens(os.Getenv("JWT_SECRET"), jwtTTL)
+	if err != nil {
+		return err
+	}
+	sender := mail.SMTP{
+		Addr: net.JoinHostPort(envOr("SMTP_HOST", "localhost"), envOr("SMTP_PORT", "1025")),
+		From: envOr("SMTP_FROM", "AREA <no-reply@area.local>"),
+	}
+	authSvc, err := auth.NewService(pool, tokens, sender, envOr("WEB_BASE_URL", "http://localhost:8081"))
+	if err != nil {
+		return err
+	}
+
 	registry := node.NewRegistry()
 	connectors.Register(registry)
+
 	mux := http.NewServeMux()
+	authSvc.Routes(mux)
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
 	})
 	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
+	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
+	mux.Handle("GET /docs", api.Docs())
 
 	srv := &http.Server{
 		Addr:              addr,
