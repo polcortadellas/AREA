@@ -36,6 +36,8 @@ make format    # auto-fix formatting in all three modules
 
 Each module can also be checked on its own: `make lint-server`, `make lint-web`, `make lint-mobile`, and `make lint-api` for the OpenAPI contract ([`server/api/openapi.yaml`](server/api/openapi.yaml)).
 
+Every pull request runs [`ci.yml`](.github/workflows/ci.yml): the same linters, type-checks and tests (the server tests use a PostgreSQL service), plus the server and web Docker builds. Changes under `mobile/` also build the APK ([`android.yml`](.github/workflows/android.yml)).
+
 ## Installation Process
 
 Requirements: Docker with Docker Compose v2.
