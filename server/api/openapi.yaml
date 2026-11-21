@@ -300,12 +300,8 @@ paths:
                 - from: start
                   to: echo
       responses:
-        "201":
-          description: Created.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Workflow"
+        "200":
+          description: The graph is valid. Nothing is saved yet (M-20).
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":

@@ -16,7 +16,7 @@ func CreateWorkflow(reg *node.Registry) http.HandlerFunc {
 		r.Body = http.MaxBytesReader(w, r.Body, maxBody)
 		var wf node.Workflow
 		if err := json.NewDecoder(r.Body).Decode(&wf); err != nil {
-			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_json"})
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_body"})
 			return
 		}
 		var invalid *node.InvalidWorkflowError

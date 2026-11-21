@@ -147,7 +147,7 @@ func runAPI(ctx context.Context, addr string) error {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
 	})
-	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
+	mux.Handle("POST /workflows", tokens.RequireAuth(api.CreateWorkflow(registry)))
 	mux.Handle("POST /workflows/{workflowId}/trigger", tokens.RequireAuth(api.TriggerWorkflow(pool, runQueue)))
 	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
 	mux.Handle("GET /docs", api.Docs())
