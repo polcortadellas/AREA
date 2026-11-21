@@ -14,6 +14,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -212,5 +213,16 @@ func TestRegisterExistingAccounts(t *testing.T) {
 	}
 	if len(s.mail.sent) != sent {
 		t.Fatal("e-mail sent for an already verified address")
+	}
+}
+
+func TestMeRejectsDeletedUser(t *testing.T) {
+	s := newTestServer(t)
+	token, _, err := newTestTokens(t).Issue(uuid.New())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if code, _ := s.do("GET", "/auth/me", token, nil); code != http.StatusUnauthorized {
+		t.Fatalf("me for unknown user: status %d, want 401", code)
 	}
 }

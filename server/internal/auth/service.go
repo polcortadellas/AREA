@@ -36,6 +36,7 @@ var (
 	ErrInvalidCredentials = errors.New("invalid email or password")
 	ErrEmailNotVerified   = errors.New("email not verified")
 	ErrInvalidVerifyToken = errors.New("invalid or expired verification token")
+	ErrUserNotFound       = errors.New("user not found")
 )
 
 type Service struct {
@@ -124,7 +125,6 @@ func (s *Service) Register(ctx context.Context, email, password string) error {
 	return s.mail.Send(ctx, email, "Confirm your AREA account", body)
 }
 
-// VerifyEmail consumes a confirmation token, activates the account and logs the user in.
 func (s *Service) VerifyEmail(ctx context.Context, token string) (string, time.Duration, error) {
 	var userID uuid.UUID
 	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
@@ -174,7 +174,11 @@ func (s *Service) Login(ctx context.Context, email, password string) (string, ti
 }
 
 func (s *Service) User(ctx context.Context, id uuid.UUID) (sqlc.User, error) {
-	return sqlc.New(s.pool).GetUserByID(ctx, id)
+	user, err := sqlc.New(s.pool).GetUserByID(ctx, id)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return sqlc.User{}, ErrUserNotFound
+	}
+	return user, err
 }
 
 func normalizeEmail(raw string) (string, error) {

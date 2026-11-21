@@ -84,6 +84,10 @@ func (s *Service) handleLogin(w http.ResponseWriter, r *http.Request) {
 func (s *Service) handleMe(w http.ResponseWriter, r *http.Request) {
 	id, _ := UserID(r.Context())
 	user, err := s.User(r.Context(), id)
+	if errors.Is(err, ErrUserNotFound) {
+		unauthorized(w)
+		return
+	}
 	if err != nil {
 		internalError(w, "me", err)
 		return
