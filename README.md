@@ -34,7 +34,7 @@ make lint      # every linter and type-check; must exit 0 before opening a PR
 make format    # auto-fix formatting in all three modules
 ```
 
-Each module can also be checked on its own: `make lint-server`, `make lint-web`, `make lint-mobile`.
+Each module can also be checked on its own: `make lint-server`, `make lint-web`, `make lint-mobile`, and `make lint-api` for the OpenAPI contract ([`server/api/openapi.yaml`](server/api/openapi.yaml)).
 
 Every pull request runs [`ci.yml`](.github/workflows/ci.yml): the same linters, type-checks and tests (the server tests use a PostgreSQL service), plus the server and web Docker builds. Changes under `mobile/` also build the APK ([`android.yml`](.github/workflows/android.yml)).
 
@@ -54,6 +54,7 @@ The first build takes a while: the Android APK is compiled inside Docker (on App
 | What | Where |
 |---|---|
 | API | http://localhost:8080 (`GET /ping` answers `pong`) |
+| API documentation (Swagger UI) | http://localhost:8080/docs (raw contract: `/openapi.yaml`) |
 | Web client | http://localhost:8081 |
 | Mailpit (inbox for confirmation e-mails) | http://localhost:8025 |
 | Android APK | `./dist/client.apk` (written by the `android-builder` container, which then exits) |

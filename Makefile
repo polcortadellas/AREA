@@ -1,7 +1,7 @@
 # AREA monorepo: server/ (Go), web/ (React + Vite), mobile/ (React Native, Android).
 # `make lint` must exit 0 before a PR is opened (M-01 "done when").
 
-.PHONY: install lint lint-server lint-web lint-mobile format format-server format-web format-mobile env up down logs
+.PHONY: install lint lint-server lint-web lint-mobile lint-api format format-server format-web format-mobile env up down logs
 
 # Docker Compose
 env:
@@ -28,7 +28,7 @@ install:
 	cd web && npm install
 	cd mobile && npm install
 
-lint: lint-server lint-web lint-mobile
+lint: lint-server lint-web lint-mobile lint-api
 
 # golangci-lint also runs go vet; `fmt --diff` fails if gofmt/goimports would change a file.
 lint-server:
@@ -40,6 +40,10 @@ lint-web:
 
 lint-mobile:
 	cd mobile && npm run lint && npm run typecheck && npm run format:check
+
+# OpenAPI contract; rules in server/api/redocly.yaml.
+lint-api:
+	cd server/api && REDOCLY_TELEMETRY=off npx --yes @redocly/cli@2.73.0 lint openapi.yaml
 
 format: format-server format-web format-mobile
 

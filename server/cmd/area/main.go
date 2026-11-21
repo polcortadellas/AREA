@@ -70,6 +70,8 @@ func runAPI(ctx context.Context, addr string) error {
 		_, _ = w.Write([]byte("pong\n"))
 	})
 	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
+	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
+	mux.Handle("GET /docs", api.Docs())
 
 	srv := &http.Server{
 		Addr:              addr,
