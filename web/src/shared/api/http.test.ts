@@ -32,9 +32,7 @@ describe('apiFetch', () => {
   it('still throws an ApiError when the error body is not JSON', async () => {
     const html = '<html><body>502 Bad Gateway</body></html>';
     server.use(
-      http.get('*/about.json', () =>
-        HttpResponse.html(html, { status: 502 }),
-      ),
+      http.get('*/about.json', () => HttpResponse.html(html, { status: 502 })),
     );
 
     const error = await apiFetch('/about.json').catch((e: unknown) => e);
