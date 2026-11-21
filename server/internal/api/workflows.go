@@ -3,6 +3,7 @@ package api
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/polcortadellas/AREA/server/internal/node"
@@ -15,13 +16,26 @@ func CreateWorkflow(reg *node.Registry) http.HandlerFunc {
 		r.Body = http.MaxBytesReader(w, r.Body, maxBody)
 		var wf node.Workflow
 		if err := json.NewDecoder(r.Body).Decode(&wf); err != nil {
-			http.Error(w, "invalid JSON", http.StatusBadRequest)
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid_json"})
 			return
 		}
-		if err := reg.ValidateWorkflow(wf); err != nil {
-			http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		var invalid *node.InvalidWorkflowError
+		if err := reg.ValidateWorkflow(wf); errors.As(err, &invalid) {
+			writeJSON(w, http.StatusUnprocessableEntity, map[string]any{
+				"error":    "invalid_workflow",
+				"problems": invalid.Problems,
+			})
+			return
+		} else if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{"error": "internal_error"})
 			return
 		}
 		w.WriteHeader(http.StatusOK)
 	}
+}
+
+func writeJSON(w http.ResponseWriter, status int, v any) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	_ = json.NewEncoder(w).Encode(v)
 }
