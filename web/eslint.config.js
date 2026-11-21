@@ -7,7 +7,7 @@ import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
 
 export default defineConfig([
-  globalIgnores(['dist']),
+  globalIgnores(['dist', 'src/shared/api/generated']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [js.configs.recommended, tseslint.configs.recommended],
@@ -26,6 +26,11 @@ export default defineConfig([
         { allowConstantExport: true },
       ],
     },
+  },
+  // shadcn/ui files export variants next to components; they are generated, keep them as-is.
+  {
+    files: ['src/shared/ui/**/*.tsx'],
+    rules: { 'react-refresh/only-export-components': 'off' },
   },
   // Must stay last: turns off ESLint rules that would fight with Prettier.
   prettier,
