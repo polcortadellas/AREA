@@ -8,9 +8,8 @@ import (
 )
 
 func evaluate(config node.Values) (bool, error) {
-	left, _ := config["left"].(string)
+	left, right := fmt.Sprint(config["left"]), fmt.Sprint(config["right"])
 	op, _ := config["op"].(string)
-	right, _ := config["right"].(string)
 
 	switch op {
 	case "equal":
