@@ -300,18 +300,40 @@ paths:
                 - from: start
                   to: echo
       responses:
-        "201":
-          description: Created.
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Workflow"
+        "200":
+          description: The graph is valid. Nothing is saved yet (M-20).
         "400":
           $ref: "#/components/responses/BadRequest"
         "401":
           $ref: "#/components/responses/Unauthorized"
         "422":
           $ref: "#/components/responses/InvalidWorkflow"
+
+  /workflows/{workflowId}/trigger:
+    post:
+      operationId: triggerWorkflow
+      tags: [ runs ]
+      summary: Enqueue a run of the workflow
+      description: |
+        Stores the run as PENDING and returns at once; a worker executes it
+        later. The run is kept even if publishing to the queue fails, and the
+        recovery sweep enqueues it again.
+      parameters:
+        - name: workflowId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "202":
+          description: Run queued; execution continues in a worker.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RunAccepted"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
 
   /workflows/{workflowId}:
     parameters:
@@ -669,6 +691,14 @@ components:
         status:
           type: string
           enum: [verification_email_sent]
+
+    RunAccepted:
+      type: object
+      required: [id]
+      properties:
+        id:
+          type: string
+          format: uuid
 
     VerifyEmailRequest:
       type: object

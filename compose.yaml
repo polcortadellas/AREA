@@ -23,6 +23,10 @@ services:
       <<: *server-env
       ROLE: api
       API_ADDR: ":8080"
+      JWT_SECRET: ${JWT_SECRET:?copy .env.example to .env}
+      JWT_TTL: ${JWT_TTL:-1h}
+      SMTP_FROM: ${SMTP_FROM:-AREA <no-reply@area.local>}
+      WEB_BASE_URL: ${PUBLIC_WEB_URL:-http://localhost:8081}
     ports:
       - "${API_PORT:-8080}:8080"
 
@@ -37,6 +41,7 @@ services:
     environment:
       <<: *server-env
       ROLE: worker
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
 
   # Infrastructure
   postgres:

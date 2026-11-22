@@ -14,16 +14,26 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
+
 	"github.com/polcortadellas/AREA/server/internal/api"
+	"github.com/polcortadellas/AREA/server/internal/auth"
 	"github.com/polcortadellas/AREA/server/internal/connectors"
 	"github.com/polcortadellas/AREA/server/internal/db"
+	"github.com/polcortadellas/AREA/server/internal/mail"
 	"github.com/polcortadellas/AREA/server/internal/node"
+	"github.com/polcortadellas/AREA/server/internal/queue"
+	"github.com/polcortadellas/AREA/server/internal/worker"
 )
 
 func main() {
@@ -45,12 +55,47 @@ func run() error {
 	switch *role {
 	case "api":
 		return runAPI(ctx, envOr("API_ADDR", ":8080"))
-	case "scheduler", "worker":
+	case "worker":
+		return runWorker(ctx)
+	case "scheduler":
+		// Filled in by M-13; for now the process just stays up.
 		<-ctx.Done()
 		return nil
 	default:
 		return fmt.Errorf("unknown role %q (want api, scheduler or worker)", *role)
 	}
+}
+
+func runWorker(ctx context.Context) error {
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return errors.New("DATABASE_URL is not set")
+	}
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
+
+	redisOpt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	if err != nil {
+		return fmt.Errorf("REDIS_URL: %w", err)
+	}
+	redisClient := redis.NewClient(redisOpt)
+	defer func() { _ = redisClient.Close() }()
+
+	concurrency, err := strconv.Atoi(envOr("WORKER_CONCURRENCY", "4"))
+	if err != nil || concurrency < 1 {
+		return fmt.Errorf("WORKER_CONCURRENCY must be a positive integer")
+	}
+
+	// shortcut: placeholder executor that finishes every run at once, replaced by the DAG executor in M-12.
+	exec := worker.ExecutorFunc(func(context.Context, uuid.UUID) error { return nil })
+	hostname, _ := os.Hostname()
+	w := worker.New(pool, redisClient, exec, fmt.Sprintf("%s-%d", hostname, os.Getpid()))
+
+	slog.Info("worker starting", "concurrency", concurrency)
+	return w.Run(ctx, concurrency)
 }
 
 func runAPI(ctx context.Context, addr string) error {
@@ -62,14 +107,48 @@ func runAPI(ctx context.Context, addr string) error {
 		return fmt.Errorf("migrate: %w", err)
 	}
 
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
+
+	jwtTTL, err := time.ParseDuration(envOr("JWT_TTL", "1h"))
+	if err != nil {
+		return fmt.Errorf("JWT_TTL: %w", err)
+	}
+	tokens, err := auth.NewTokens(os.Getenv("JWT_SECRET"), jwtTTL)
+	if err != nil {
+		return err
+	}
+	sender := mail.SMTP{
+		Addr: net.JoinHostPort(envOr("SMTP_HOST", "localhost"), envOr("SMTP_PORT", "1025")),
+		From: envOr("SMTP_FROM", "AREA <no-reply@area.local>"),
+	}
+	authSvc, err := auth.NewService(pool, tokens, sender, envOr("WEB_BASE_URL", "http://localhost:8081"))
+	if err != nil {
+		return err
+	}
+
+	redisOpt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	if err != nil {
+		return fmt.Errorf("REDIS_URL: %w", err)
+	}
+	redisClient := redis.NewClient(redisOpt)
+	defer func() { _ = redisClient.Close() }()
+	runQueue := queue.NewStreams(redisClient)
+
 	registry := node.NewRegistry()
 	connectors.Register(registry)
+
 	mux := http.NewServeMux()
+	authSvc.Routes(mux)
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
 	})
-	mux.Handle("POST /workflows", api.CreateWorkflow(registry))
+	mux.Handle("POST /workflows", tokens.RequireAuth(api.CreateWorkflow(registry)))
+	mux.Handle("POST /workflows/{workflowId}/trigger", tokens.RequireAuth(api.TriggerWorkflow(pool, runQueue)))
 	mux.Handle("GET /about.json", api.About(registry))
 	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
 	mux.Handle("GET /docs", api.Docs())

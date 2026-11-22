@@ -1,7 +1,7 @@
 # AREA monorepo: server/ (Go), web/ (React + Vite), mobile/ (React Native, Android).
 # `make lint` must exit 0 before a PR is opened (M-01 "done when").
 
-.PHONY: install lint lint-server lint-web lint-mobile lint-api format format-server format-web format-mobile env up down logs
+.PHONY: install lint lint-server lint-web lint-mobile lint-api format format-server format-web format-mobile env up down logs generate
 
 # Docker Compose
 env:
@@ -22,6 +22,10 @@ down:
 
 logs:
 	docker compose logs -f
+
+# Regenerates server/internal/db/sqlc from internal/db/queries and the migrations
+generate:
+	cd server && sqlc generate
 
 install:
 	cd server && go mod download
