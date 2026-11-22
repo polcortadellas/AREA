@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -125,7 +126,8 @@ func runAPI(ctx context.Context, addr string) error {
 		Addr: net.JoinHostPort(envOr("SMTP_HOST", "localhost"), envOr("SMTP_PORT", "1025")),
 		From: envOr("SMTP_FROM", "AREA <no-reply@area.local>"),
 	}
-	authSvc, err := auth.NewService(pool, tokens, sender, envOr("WEB_BASE_URL", "http://localhost:8081"))
+	webBaseURL := envOr("WEB_BASE_URL", "http://localhost:8081")
+	authSvc, err := auth.NewService(pool, tokens, sender, webBaseURL)
 	if err != nil {
 		return err
 	}
@@ -154,7 +156,7 @@ func runAPI(ctx context.Context, addr string) error {
 
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           mux,
+		Handler:           api.CORS(strings.Split(envOr("CORS_ORIGINS", webBaseURL), ","), mux),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
