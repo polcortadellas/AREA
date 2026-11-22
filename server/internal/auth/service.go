@@ -46,6 +46,8 @@ type Service struct {
 	webBaseURL string
 	// Compared against when the e-mail is unknown, so login takes the same time.
 	dummyHash string
+	// The session cookie is Secure whenever the web client is served over HTTPS.
+	secureCookie bool
 }
 
 func NewService(pool *pgxpool.Pool, tokens *Tokens, mail mailer.Sender, webBaseURL string) (*Service, error) {
@@ -54,11 +56,12 @@ func NewService(pool *pgxpool.Pool, tokens *Tokens, mail mailer.Sender, webBaseU
 		return nil, err
 	}
 	return &Service{
-		pool:       pool,
-		tokens:     tokens,
-		mail:       mail,
-		webBaseURL: strings.TrimRight(webBaseURL, "/"),
-		dummyHash:  dummy,
+		pool:         pool,
+		tokens:       tokens,
+		mail:         mail,
+		webBaseURL:   strings.TrimRight(webBaseURL, "/"),
+		dummyHash:    dummy,
+		secureCookie: strings.HasPrefix(webBaseURL, "https://"),
 	}, nil
 }
 
