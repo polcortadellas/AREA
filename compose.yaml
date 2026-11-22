@@ -41,6 +41,7 @@ services:
     environment:
       <<: *server-env
       ROLE: worker
+      WORKER_CONCURRENCY: ${WORKER_CONCURRENCY:-4}
 
   # Infrastructure
   postgres:
