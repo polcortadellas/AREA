@@ -1,10 +1,12 @@
 import { screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { expectNoA11yViolations } from '@/test/axe';
-import { renderRoute } from '@/test/render';
+import { renderRoute, signIn } from '@/test/render';
 
 describe('RootLayout', () => {
+  beforeEach(signIn);
+
   it('renders the dashboard inside the layout', async () => {
     renderRoute('/');
 
