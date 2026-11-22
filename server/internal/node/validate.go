@@ -66,7 +66,8 @@ func (e *InvalidWorkflowError) Error() string {
 
 func (e *InvalidWorkflowError) Is(target error) bool { return target == ErrInvalidWorkflow }
 
-var refRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
+// RefRe matches {{ node.key }}: group 1 is the node, group 2 the key.
+var RefRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
 
 // One parent per node keeps the graph a tree: branches cannot reconverge.
 func (r *Registry) ValidateWorkflow(w Workflow) error {
@@ -207,10 +208,10 @@ func (r *Registry) checkRefs(n WorkflowNode, parent map[string]string, nodes map
 		if !ok {
 			continue
 		}
-		if strings.Contains(refRe.ReplaceAllString(s, ""), "{{") {
+		if strings.Contains(RefRe.ReplaceAllString(s, ""), "{{") {
 			problems = append(problems, fmt.Sprintf("%q has a malformed {{ node.key }} reference", key))
 		}
-		for _, m := range refRe.FindAllStringSubmatch(s, -1) {
+		for _, m := range RefRe.FindAllStringSubmatch(s, -1) {
 			ref, field := m[1], m[2]
 			if ref == "trigger" {
 				ref = triggerID
