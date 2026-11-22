@@ -33,6 +33,14 @@ type Workflow struct {
 	Edges []Edge         `json:"edges"`
 }
 
+var conditionSchema = Schema{
+	{Key: "left", Type: TypeString, Required: true, Description: "Value to compare, usually a {{ node.key }} reference."},
+	{Key: "op", Type: TypeString, Required: true, Description: "Comparison operator."},
+	{Key: "right", Type: TypeString, Required: true, Description: "Value to compare against."},
+}
+
+var ConditionOps = []string{"equal", "not_equal", "greater_than", "less_than"}
+
 var ErrInvalidWorkflow = errors.New("invalid workflow")
 
 type Problem struct {
@@ -100,7 +108,11 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 			}
 		case KindCondition:
 			conditions++
-			// shortcut: condition config is only checked for {{ }} refs, add its own schema when M-12 defines the operators.
+			if err := conditionSchema.Validate(n.Config); err != nil {
+				bad(n.ID, "%v", err)
+			} else if op, _ := n.Config["op"].(string); !slices.Contains(ConditionOps, op) {
+				bad(n.ID, "unknown operator %q, want one of %s", op, strings.Join(ConditionOps, ", "))
+			}
 		default:
 			bad(n.ID, "unknown kind %q", n.Kind)
 		}

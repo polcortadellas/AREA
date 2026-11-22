@@ -62,9 +62,11 @@ The first build takes a while: the Android APK is compiled inside Docker (on App
 PostgreSQL and Redis are only reachable from inside the Compose network. Host ports can be changed in `.env`.
 
 ```bash
-make up     # docker compose up --build -d
-make logs   # follow the logs of every container
-make down   # stop the stack (data volumes are kept)
+make up        # docker compose up --build -d
+make up-back   # server roles and infrastructure only, skips the Android APK build
+make up-front  # up-back plus the web client
+make logs      # follow the logs of every container
+make down      # stop the stack (data volumes are kept)
 ```
 
 ## Testing

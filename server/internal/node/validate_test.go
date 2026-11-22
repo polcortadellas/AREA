@@ -24,7 +24,8 @@ func echo(id, msg string) node.WorkflowNode {
 }
 
 func cond(id string) node.WorkflowNode {
-	return node.WorkflowNode{ID: id, Kind: node.KindCondition, Type: "compare"}
+	return node.WorkflowNode{ID: id, Kind: node.KindCondition, Type: "compare",
+		Config: node.Values{"left": "{{ t.count }}", "op": "greater_than", "right": "3"}}
 }
 
 // trigger -> condition -> true: a -> b, false: c
@@ -89,6 +90,15 @@ func TestValidateWorkflowRejects(t *testing.T) {
 		"unknown node type": {func(w *node.Workflow) {
 			w.Nodes[2].Type = "dummy.nope"
 		}, "unknown reaction"},
+		"unknown condition operator": {func(w *node.Workflow) {
+			w.Nodes[1].Config["op"] = "equals"
+		}, `unknown operator "equals"`},
+		"condition without right": {func(w *node.Workflow) {
+			delete(w.Nodes[1].Config, "right")
+		}, `"right" is required`},
+		"condition ref to a later node": {func(w *node.Workflow) {
+			w.Nodes[1].Config["left"] = "{{ a.message }}"
+		}, "runs before this one"},
 		"cycle cut off from trigger": {func(w *node.Workflow) {
 			w.Nodes = append(w.Nodes, echo("p", "hi"), echo("q", "hi"))
 			w.Edges = append(w.Edges, node.Edge{From: "p", To: "q"}, node.Edge{From: "q", To: "p"})

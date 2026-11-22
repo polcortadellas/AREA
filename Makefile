@@ -1,7 +1,7 @@
 # AREA monorepo: server/ (Go), web/ (React + Vite), mobile/ (React Native, Android).
 # `make lint` must exit 0 before a PR is opened (M-01 "done when").
 
-.PHONY: install lint lint-server lint-web lint-mobile lint-api format format-server format-web format-mobile env up down logs generate
+.PHONY: install lint lint-server lint-web lint-mobile lint-api format format-server format-web format-mobile env up up-back up-front down logs generate
 
 # Docker Compose
 env:
@@ -14,8 +14,17 @@ env:
 	done < .env.example > .env
 	@echo ".env created with random secrets"
 
+BACK = postgres redis mailpit api worker scheduler
+
 up:
 	docker compose up --build -d
+
+# Skip the Android APK build, which takes minutes
+up-back:
+	docker compose up --build -d $(BACK)
+
+up-front:
+	docker compose up --build -d $(BACK) web
 
 down:
 	docker compose down
