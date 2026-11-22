@@ -35,13 +35,36 @@ type Workflow struct {
 
 var ErrInvalidWorkflow = errors.New("invalid workflow")
 
+type Problem struct {
+	Node    string `json:"node,omitempty"`
+	Message string `json:"message"`
+}
+
+type InvalidWorkflowError struct {
+	Problems []Problem
+}
+
+func (e *InvalidWorkflowError) Error() string {
+	parts := make([]string, len(e.Problems))
+	for i, p := range e.Problems {
+		if p.Node != "" {
+			parts[i] = fmt.Sprintf("node %q: %s", p.Node, p.Message)
+		} else {
+			parts[i] = p.Message
+		}
+	}
+	return ErrInvalidWorkflow.Error() + ": " + strings.Join(parts, "; ")
+}
+
+func (e *InvalidWorkflowError) Is(target error) bool { return target == ErrInvalidWorkflow }
+
 var refRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
 
 // One parent per node keeps the graph a tree: branches cannot reconverge.
 func (r *Registry) ValidateWorkflow(w Workflow) error {
-	var problems []string
-	bad := func(format string, args ...any) {
-		problems = append(problems, fmt.Sprintf(format, args...))
+	var problems []Problem
+	bad := func(node, format string, args ...any) {
+		problems = append(problems, Problem{Node: node, Message: fmt.Sprintf(format, args...)})
 	}
 
 	nodes := make(map[string]WorkflowNode, len(w.Nodes))
@@ -49,11 +72,11 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 	conditions := 0
 	for _, n := range w.Nodes {
 		if n.ID == "" || n.ID == "trigger" {
-			bad("node id %q is not allowed", n.ID)
+			bad("", "node id %q is not allowed", n.ID)
 			continue
 		}
 		if _, dup := nodes[n.ID]; dup {
-			bad("node %q appears twice", n.ID)
+			bad(n.ID, "node appears twice")
 			continue
 		}
 		nodes[n.ID] = n
@@ -61,32 +84,32 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 		switch n.Kind {
 		case KindTrigger:
 			if triggerID != "" {
-				bad("a workflow has exactly one trigger")
+				bad(n.ID, "a workflow has exactly one trigger")
 			}
 			triggerID = n.ID
 			if t, ok := r.Trigger(n.Type); !ok {
-				bad("node %q: unknown trigger %q", n.ID, n.Type)
+				bad(n.ID, "unknown trigger %q", n.Type)
 			} else if err := t.ValidateConfig(n.Config); err != nil {
-				bad("node %q: %v", n.ID, err)
+				bad(n.ID, "%v", err)
 			}
 		case KindReaction:
 			if re, ok := r.Reaction(n.Type); !ok {
-				bad("node %q: unknown reaction %q", n.ID, n.Type)
+				bad(n.ID, "unknown reaction %q", n.Type)
 			} else if err := re.ValidateConfig(n.Config); err != nil {
-				bad("node %q: %v", n.ID, err)
+				bad(n.ID, "%v", err)
 			}
 		case KindCondition:
 			conditions++
 			// shortcut: condition config is only checked for {{ }} refs, add its own schema when M-12 defines the operators.
 		default:
-			bad("node %q: unknown kind %q", n.ID, n.Kind)
+			bad(n.ID, "unknown kind %q", n.Kind)
 		}
 	}
 	if triggerID == "" {
-		bad("a workflow needs a trigger")
+		bad("", "a workflow needs a trigger")
 	}
 	if conditions > 1 {
-		bad("a workflow has at most one condition, found %d", conditions)
+		bad("", "a workflow has at most one condition, found %d", conditions)
 	}
 
 	parent := make(map[string]string, len(w.Nodes))
@@ -96,22 +119,22 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 		from, okFrom := nodes[e.From]
 		_, okTo := nodes[e.To]
 		if !okFrom || !okTo {
-			bad("edge %s -> %s points to a missing node", e.From, e.To)
+			bad("", "edge %s -> %s points to a missing node", e.From, e.To)
 			continue
 		}
 		switch {
 		case e.To == triggerID:
-			bad("edge %s -> %s: nothing can point to the trigger", e.From, e.To)
+			bad(e.From, "edge %s -> %s: nothing can point to the trigger", e.From, e.To)
 			continue
 		case from.Kind == KindCondition && e.Branch != "true" && e.Branch != "false":
-			bad("edge %s -> %s: an edge leaving a condition needs branch \"true\" or \"false\"", e.From, e.To)
+			bad(e.From, "edge %s -> %s: an edge leaving a condition needs branch \"true\" or \"false\"", e.From, e.To)
 			continue
 		case from.Kind != KindCondition && e.Branch != "":
-			bad("edge %s -> %s: only a condition has branches", e.From, e.To)
+			bad(e.From, "edge %s -> %s: only a condition has branches", e.From, e.To)
 			continue
 		}
 		if _, has := parent[e.To]; has {
-			bad("node %q has several incoming edges: branches cannot reconverge", e.To)
+			bad(e.To, "several incoming edges: branches cannot reconverge")
 			continue
 		}
 		if from.Kind == KindCondition {
@@ -119,7 +142,7 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 				branches[e.From] = map[string]bool{}
 			}
 			if branches[e.From][e.Branch] {
-				bad("condition %q: branch %q has more than one edge", e.From, e.Branch)
+				bad(e.From, "branch %q has more than one edge", e.Branch)
 				continue
 			}
 			branches[e.From][e.Branch] = true
@@ -132,7 +155,7 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 		if n.Kind == KindCondition {
 			for _, b := range []string{"true", "false"} {
 				if !branches[n.ID][b] {
-					bad("condition %q: branch %q is empty", n.ID, b)
+					bad(n.ID, "branch %q is empty", b)
 				}
 			}
 		}
@@ -151,18 +174,18 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 	}
 	for _, n := range w.Nodes {
 		if !reached[n.ID] {
-			bad("node %q is not connected to the trigger", n.ID)
+			bad(n.ID, "not connected to the trigger")
 			continue
 		}
 		for _, p := range r.checkRefs(n, parent, nodes, triggerID) {
-			bad("node %q: %s", n.ID, p)
+			bad(n.ID, "%s", p)
 		}
 	}
 
 	if len(problems) == 0 {
 		return nil
 	}
-	return fmt.Errorf("%w: %s", ErrInvalidWorkflow, strings.Join(problems, "; "))
+	return &InvalidWorkflowError{Problems: problems}
 }
 
 func (r *Registry) checkRefs(n WorkflowNode, parent map[string]string, nodes map[string]WorkflowNode, triggerID string) []string {

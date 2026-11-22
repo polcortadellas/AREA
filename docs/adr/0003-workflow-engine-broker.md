@@ -27,4 +27,17 @@ A modular monolith in Go, deployed as one binary in three roles: `api`, `schedul
 
 ## Evidence
 
-**Redis Streams has not been validated in a spike yet.** The validation (stop and restart a consumer with `XAUTOCLAIM`) is part of task M-11. This decision rests on the documentation and on the comparison above, not on measurements.
+Validated by the automated tests of `server/internal/worker` (M-11), run against Redis 7.4 and PostgreSQL 16:
+
+- Runs queued while no worker is up are executed exactly once when workers start, even when the same run is queued twice (the atomic claim drops the duplicate).
+- Runs stored as `PENDING` but never published (the api crashed between the commit and the `XADD`) are published again by the recovery sweep after `StaleAfter` (30 s).
+- Messages read by a consumer that never acknowledged them are taken over with `XAUTOCLAIM` and executed once.
+- Capacity is set with `WORKER_CONCURRENCY` (default 4).
+
+Timeouts today: an e-mail send is bounded by 10 s, a queue read blocks for 1 s, and recovery acts after 30 s. Calls to third-party services must set their own timeout when M-12 adds them.
+
+Not covered:
+
+- A run whose worker dies after the claim stays `RUNNING`: nothing recovers it yet (retries and the dead-letter store belong to ENG-RETRY).
+- The live demonstration with `docker compose stop worker` was not run; the tests stand in for it.
+- The sweep re-enqueues every stale `PENDING` run on each pass, so a long outage leaves duplicate messages that the claim drops.
