@@ -91,7 +91,7 @@ OPENAPI_SPEC=path/to/openapi.yaml npm run api:gen # another location
 
 After regenerating, register the new mock handlers in `src/mocks/handlers.ts` (e.g. `...getWorkflowsMock()`) and commit the generated folder: the web Docker build only sees `web/`, so it cannot read the spec from `server/`. The generated code is excluded from ESLint and Prettier; never edit it by hand.
 
-Until the spec exists, `src/mocks/handlers/about.ts` holds a hand-written `/about.json`. Hand-written handlers listed before generated ones take priority, which is also how a test or a dev session overrides a single endpoint.
+Hand-written handlers in `src/mocks/handlers/` are listed before the generated ones and take priority, which is also how a test or a dev session overrides a single endpoint. `about.ts` returns a realistic `/about.json`, and `auth.ts` behaves like the real auth endpoints: log in with any e-mail and the password `correct-horse`, `unverified@example.com` is not confirmed yet, and `/verify-email?token=valid-token` confirms an e-mail. The session cookie is simulated per browser tab.
 
 Errors: `apiFetch` throws `ApiError` with `status` and the parsed `body` (e.g. the HTTP 422 validation details), and generated hooks type their `error` as `ApiError`.
 
