@@ -33,3 +33,16 @@ func TestGoogleAsksForARefreshToken(t *testing.T) {
 		t.Errorf("consent URL %v lacks access_type=offline and prompt=consent", u)
 	}
 }
+
+func TestNormalizeScopes(t *testing.T) {
+	tests := []struct{ in, fallback, want string }{
+		{"repo,read:user", "", "repo read:user"},
+		{" openid  email ", "", "openid email"},
+		{"", "repo read:user", "repo read:user"},
+	}
+	for _, tt := range tests {
+		if got := normalizeScopes(tt.in, tt.fallback); got != tt.want {
+			t.Errorf("normalizeScopes(%q, %q) = %q, want %q", tt.in, tt.fallback, got, tt.want)
+		}
+	}
+}
