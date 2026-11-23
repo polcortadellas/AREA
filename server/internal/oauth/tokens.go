@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
 	"github.com/google/uuid"
@@ -17,6 +18,10 @@ import (
 const (
 	// A token this close to expiry is refreshed before it is handed out.
 	expiryLeeway = time.Minute
+	// The background refresher wakes up every refreshEvery and renews the
+	// tokens that expire within refreshWindow.
+	refreshEvery  = time.Minute
+	refreshWindow = 10 * time.Minute
 )
 
 var (
@@ -86,6 +91,60 @@ func (s *Service) Credentials(ctx context.Context, userID uuid.UUID, service str
 		return node.Credentials{}, err
 	}
 	return node.Credentials{AccessToken: access}, nil
+}
+
+// RefreshDue renews every token that expires before the given time, one row
+// per transaction. SKIP LOCKED lets several API replicas sweep at once without
+// renewing a token twice. Failures are logged and the sweep moves on; the
+// returned count is the number of tokens renewed.
+func (s *Service) RefreshDue(ctx context.Context, before time.Time) (int, error) {
+	skip := []uuid.UUID{} // not nil: ANY(NULL) would match no row
+	refreshed := 0
+	for {
+		tx, err := s.pool.Begin(ctx)
+		if err != nil {
+			return refreshed, fmt.Errorf("begin: %w", err)
+		}
+		row, err := s.q.WithTx(tx).LockNextExpiringUserService(ctx, sqlc.LockNextExpiringUserServiceParams{Before: &before, Skip: skip})
+		if err != nil {
+			_ = tx.Rollback(ctx)
+			if errors.Is(err, pgx.ErrNoRows) {
+				return refreshed, nil
+			}
+			return refreshed, fmt.Errorf("lock expiring token: %w", err)
+		}
+		skip = append(skip, row.ID)
+
+		_, err = s.refresh(ctx, tx, row)
+		switch err = endRefresh(ctx, tx, err); {
+		case err == nil:
+			refreshed++
+		case errors.Is(err, ErrRelinkRequired):
+			slog.Warn("oauth: refresh token rejected, the user must link again", "service", row.Service, "user", row.UserID)
+		default:
+			slog.Warn("oauth: token refresh failed, retrying next sweep", "service", row.Service, "user", row.UserID, "err", err)
+		}
+	}
+}
+
+// RunRefresher renews tokens shortly before they expire until ctx is done.
+func (s *Service) RunRefresher(ctx context.Context) {
+	ticker := time.NewTicker(refreshEvery)
+	defer ticker.Stop()
+	for {
+		n, err := s.RefreshDue(ctx, time.Now().Add(refreshWindow))
+		if err != nil && ctx.Err() == nil {
+			slog.Error("oauth: token refresh sweep", "err", err)
+		}
+		if n > 0 {
+			slog.Info("oauth: tokens refreshed", "count", n)
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+		}
+	}
 }
 
 func expiresBefore(row sqlc.UserService, t time.Time) bool {
