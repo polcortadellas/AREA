@@ -14,14 +14,18 @@ export class ApiError<TBody = unknown> extends Error {
 }
 
 /**
- * The single place that talks to the server. Orval-generated hooks call it,
- * so auth headers (M-18) and error handling only need to be added here.
+ * The single place that talks to the server. Orval-generated hooks call it.
+ * The session is the server's HttpOnly cookie, which scripts cannot read:
+ * `credentials: 'include'` sends it to the API's origin, and X-Requested-With
+ * is the CSRF header the API requires with it.
  */
 export async function apiFetch<T>(url: string, init?: RequestInit): Promise<T> {
   const response = await fetch(`${apiUrl}${url}`, {
     ...init,
+    credentials: 'include',
     headers: {
       Accept: 'application/json',
+      'X-Requested-With': 'XMLHttpRequest',
       ...init?.headers,
     },
   });

@@ -104,3 +104,33 @@ func TestRequireAuth(t *testing.T) {
 		}
 	}
 }
+
+func TestRequireAuthWithCookie(t *testing.T) {
+	tk := newTestTokens(t)
+	token, _, _ := tk.Issue(uuid.New())
+	h := tk.RequireAuth(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	}))
+
+	for _, tc := range []struct {
+		method string
+		csrf   bool
+		want   int
+	}{
+		{http.MethodGet, false, http.StatusNoContent},
+		{http.MethodPost, false, http.StatusForbidden},
+		{http.MethodDelete, false, http.StatusForbidden},
+		{http.MethodPost, true, http.StatusNoContent},
+	} {
+		req := httptest.NewRequestWithContext(t.Context(), tc.method, "/", nil)
+		req.AddCookie(&http.Cookie{Name: SessionCookie, Value: token})
+		if tc.csrf {
+			req.Header.Set(CSRFHeader, "XMLHttpRequest")
+		}
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		if rec.Code != tc.want {
+			t.Errorf("%s csrf=%v: status %d, want %d", tc.method, tc.csrf, rec.Code, tc.want)
+		}
+	}
+}

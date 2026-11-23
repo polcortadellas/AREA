@@ -1,11 +1,13 @@
 import { NavLink, Outlet } from 'react-router';
 import { useTranslation } from 'react-i18next';
 
+import { AccountMenu, useCurrentUser } from '@/features/auth';
 import { LanguageSwitcher } from '@/shared/i18n';
 import { cn } from '@/shared/lib/utils';
 
 export function RootLayout() {
   const { t } = useTranslation();
+  const { data: user } = useCurrentUser();
 
   return (
     <div className="flex min-h-svh flex-col">
@@ -21,22 +23,30 @@ export function RootLayout() {
           <NavLink to="/" className="text-lg font-semibold">
             {t('appName')}
           </NavLink>
-          <nav aria-label={t('layout.mainNav')}>
-            <ul className="flex gap-4 text-sm">
-              <li>
-                <NavLink
-                  to="/"
-                  end
-                  className={({ isActive }) =>
-                    cn('hover:underline', isActive && 'font-semibold underline')
-                  }
-                >
-                  {t('nav.dashboard')}
-                </NavLink>
-              </li>
-            </ul>
-          </nav>
-          <LanguageSwitcher />
+          {user && (
+            <nav aria-label={t('layout.mainNav')}>
+              <ul className="flex gap-4 text-sm">
+                <li>
+                  <NavLink
+                    to="/"
+                    end
+                    className={({ isActive }) =>
+                      cn(
+                        'hover:underline',
+                        isActive && 'font-semibold underline',
+                      )
+                    }
+                  >
+                    {t('nav.dashboard')}
+                  </NavLink>
+                </li>
+              </ul>
+            </nav>
+          )}
+          <div className="flex items-center gap-4">
+            <LanguageSwitcher />
+            <AccountMenu />
+          </div>
         </div>
       </header>
 

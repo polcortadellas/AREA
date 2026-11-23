@@ -1,5 +1,5 @@
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { server } from '@/mocks/node';
 import { ApiError, apiFetch } from './http';
@@ -27,6 +27,17 @@ describe('apiFetch', () => {
 
     expect(error).toBeInstanceOf(ApiError);
     expect(error).toMatchObject({ status: 422, body: details });
+  });
+
+  it('sends the session cookie and the CSRF header', async () => {
+    const fetchSpy = vi.spyOn(globalThis, 'fetch');
+
+    await apiFetch('/about.json');
+
+    expect(fetchSpy.mock.calls[0]?.[1]).toMatchObject({
+      credentials: 'include',
+      headers: { 'X-Requested-With': 'XMLHttpRequest' },
+    });
   });
 
   it('still throws an ApiError when the error body is not JSON', async () => {

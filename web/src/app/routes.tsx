@@ -1,5 +1,6 @@
 import type { RouteObject } from 'react-router';
 
+import { authRoutes, RequireAuth } from '@/features/auth';
 import { dashboardRoutes } from '@/features/dashboard';
 import { RootLayout } from './layouts/RootLayout';
 import { NotFoundPage } from './pages/NotFoundPage';
@@ -13,6 +14,10 @@ export const routes: RouteObject[] = [
   {
     element: <RootLayout />,
     errorElement: <RouteErrorPage />,
-    children: [...dashboardRoutes, { path: '*', element: <NotFoundPage /> }],
+    children: [
+      ...authRoutes,
+      { element: <RequireAuth />, children: [...dashboardRoutes] },
+      { path: '*', element: <NotFoundPage /> },
+    ],
   },
 ];
