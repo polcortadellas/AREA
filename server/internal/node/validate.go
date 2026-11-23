@@ -33,6 +33,14 @@ type Workflow struct {
 	Edges []Edge         `json:"edges"`
 }
 
+var conditionSchema = Schema{
+	{Key: "left", Type: TypeString, Required: true, Description: "Value to compare, usually a {{ node.key }} reference."},
+	{Key: "op", Type: TypeString, Required: true, Description: "Comparison operator."},
+	{Key: "right", Type: TypeString, Required: true, Description: "Value to compare against."},
+}
+
+var ConditionOps = []string{"equal", "not_equal", "greater_than", "less_than"}
+
 var ErrInvalidWorkflow = errors.New("invalid workflow")
 
 type Problem struct {
@@ -58,7 +66,8 @@ func (e *InvalidWorkflowError) Error() string {
 
 func (e *InvalidWorkflowError) Is(target error) bool { return target == ErrInvalidWorkflow }
 
-var refRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
+// RefRe matches {{ node.key }}: group 1 is the node, group 2 the key.
+var RefRe = regexp.MustCompile(`\{\{\s*([^{}\s.]+)\.([a-z][a-z0-9_]*)\s*\}\}`)
 
 // One parent per node keeps the graph a tree: branches cannot reconverge.
 func (r *Registry) ValidateWorkflow(w Workflow) error {
@@ -100,7 +109,11 @@ func (r *Registry) ValidateWorkflow(w Workflow) error {
 			}
 		case KindCondition:
 			conditions++
-			// shortcut: condition config is only checked for {{ }} refs, add its own schema when M-12 defines the operators.
+			if err := conditionSchema.Validate(n.Config); err != nil {
+				bad(n.ID, "%v", err)
+			} else if op, _ := n.Config["op"].(string); !slices.Contains(ConditionOps, op) {
+				bad(n.ID, "unknown operator %q, want one of %s", op, strings.Join(ConditionOps, ", "))
+			}
 		default:
 			bad(n.ID, "unknown kind %q", n.Kind)
 		}
@@ -195,10 +208,10 @@ func (r *Registry) checkRefs(n WorkflowNode, parent map[string]string, nodes map
 		if !ok {
 			continue
 		}
-		if strings.Contains(refRe.ReplaceAllString(s, ""), "{{") {
+		if strings.Contains(RefRe.ReplaceAllString(s, ""), "{{") {
 			problems = append(problems, fmt.Sprintf("%q has a malformed {{ node.key }} reference", key))
 		}
-		for _, m := range refRe.FindAllStringSubmatch(s, -1) {
+		for _, m := range RefRe.FindAllStringSubmatch(s, -1) {
 			ref, field := m[1], m[2]
 			if ref == "trigger" {
 				ref = triggerID

@@ -22,7 +22,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 
@@ -30,6 +29,7 @@ import (
 	"github.com/polcortadellas/AREA/server/internal/auth"
 	"github.com/polcortadellas/AREA/server/internal/connectors"
 	"github.com/polcortadellas/AREA/server/internal/db"
+	"github.com/polcortadellas/AREA/server/internal/engine"
 	"github.com/polcortadellas/AREA/server/internal/mail"
 	"github.com/polcortadellas/AREA/server/internal/node"
 	"github.com/polcortadellas/AREA/server/internal/queue"
@@ -89,8 +89,9 @@ func runWorker(ctx context.Context) error {
 		return fmt.Errorf("WORKER_CONCURRENCY must be a positive integer")
 	}
 
-	// shortcut: placeholder executor that finishes every run at once, replaced by the DAG executor in M-12.
-	exec := worker.ExecutorFunc(func(context.Context, uuid.UUID) error { return nil })
+	registry := node.NewRegistry()
+	connectors.Register(registry)
+	exec := engine.New(pool, registry)
 	hostname, _ := os.Hostname()
 	w := worker.New(pool, redisClient, exec, fmt.Sprintf("%s-%d", hostname, os.Getpid()))
 
