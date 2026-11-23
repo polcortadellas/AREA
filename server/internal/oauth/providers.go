@@ -61,3 +61,12 @@ func ProvidersFromEnv(getenv func(string) string, apiBaseURL string) map[string]
 func callbackPath(service string) string {
 	return "/services/" + service + "/callback"
 }
+
+// normalizeScopes returns the granted scopes space-separated (GitHub separates
+// them with commas), or fallback when the provider did not list them.
+func normalizeScopes(granted, fallback string) string {
+	if fields := strings.Fields(strings.ReplaceAll(granted, ",", " ")); len(fields) > 0 {
+		return strings.Join(fields, " ")
+	}
+	return fallback
+}
