@@ -108,7 +108,17 @@ func runScheduler(ctx context.Context) error {
 	}
 	defer pool.Close()
 
-	s := scheduler.New(pool)
+	redisOpt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	if err != nil {
+		return fmt.Errorf("REDIS_URL: %w", err)
+	}
+	redisClient := redis.NewClient(redisOpt)
+	defer func() { _ = redisClient.Close() }()
+
+	registry := node.NewRegistry()
+	connectors.Register(registry)
+
+	s := scheduler.New(pool, registry, queue.NewStreams(redisClient))
 	if s.RetryEvery, err = time.ParseDuration(envOr("SCHEDULER_LOCK_RETRY", "500ms")); err != nil || s.RetryEvery <= 0 {
 		return fmt.Errorf("SCHEDULER_LOCK_RETRY must be a positive duration such as 500ms")
 	}
