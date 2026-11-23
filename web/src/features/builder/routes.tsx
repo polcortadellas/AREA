@@ -1,20 +1,14 @@
 import type { RouteObject } from 'react-router';
 
+import { WorkflowBuilderPage } from './pages/WorkflowBuilderPage';
+
 export const builderRoutes: RouteObject[] = [
   {
     path: '/workflows/new',
-    lazy: async () => {
-      const { WorkflowBuilderPage } =
-        await import('./pages/WorkflowBuilderPage');
-      return { Component: WorkflowBuilderPage };
-    },
+    Component: WorkflowBuilderPage,
   },
   {
     path: '/workflows/:workflowId/edit',
-    lazy: async () => {
-      const { WorkflowBuilderPage } =
-        await import('./pages/WorkflowBuilderPage');
-      return { Component: WorkflowBuilderPage };
-    },
+    Component: WorkflowBuilderPage,
   },
 ];

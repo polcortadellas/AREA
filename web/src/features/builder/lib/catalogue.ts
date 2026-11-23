@@ -15,19 +15,25 @@ export type UpstreamOutputOption = {
 
 /** Services from /about.json that expose at least one trigger action. */
 export function triggerServices(about: About): AboutService[] {
-  return about.server.services.filter(service => service.actions.length > 0);
+  return (about?.server?.services ?? []).filter(
+    service => (service.actions?.length ?? 0) > 0,
+  );
 }
 
 /** Services from /about.json that expose at least one reaction. */
 export function reactionServices(about: About): AboutService[] {
-  return about.server.services.filter(service => service.reactions.length > 0);
+  return (about?.server?.services ?? []).filter(
+    service => (service.reactions?.length ?? 0) > 0,
+  );
 }
 
 export function findServiceByName(
   about: About,
   serviceName: string,
 ): AboutService | undefined {
-  return about.server.services.find(service => service.name === serviceName);
+  return (about?.server?.services ?? []).find(
+    service => service.name === serviceName,
+  );
 }
 
 export function findServiceByNodeType(
@@ -35,8 +41,9 @@ export function findServiceByNodeType(
   kind: 'trigger' | 'reaction',
   nodeType: string,
 ): AboutService | undefined {
-  return about.server.services.find(service => {
-    const nodes = kind === 'trigger' ? service.actions : service.reactions;
+  return (about?.server?.services ?? []).find(service => {
+    const nodes =
+      (kind === 'trigger' ? service.actions : service.reactions) ?? [];
     return nodes.some(node => node.type === nodeType);
   });
 }
@@ -46,8 +53,10 @@ export function findNodeByType(
   kind: 'trigger' | 'reaction',
   nodeType: string,
 ): AboutNode | undefined {
-  for (const service of about.server.services) {
-    const nodes = kind === 'trigger' ? service.actions : service.reactions;
+  if (!nodeType) return undefined;
+  for (const service of about?.server?.services ?? []) {
+    const nodes =
+      (kind === 'trigger' ? service.actions : service.reactions) ?? [];
     const match = nodes.find(node => node.type === nodeType);
     if (match) return match;
   }
@@ -55,11 +64,11 @@ export function findNodeByType(
 }
 
 export function defaultInputValues(
-  inputs: Field[],
+  inputs: ReadonlyArray<Field> = [],
   existing: Record<string, string | boolean> = {},
 ): Record<string, string | boolean> {
   const next: Record<string, string | boolean> = {};
-  for (const field of inputs) {
+  for (const field of inputs ?? []) {
     const current = existing[field.key];
     if (field.type === 'boolean') {
       next[field.key] = typeof current === 'boolean' ? current : false;
@@ -82,7 +91,7 @@ export function buildUpstreamOutputs(
   const options: UpstreamOutputOption[] = [];
   const triggerNode = findNodeByType(about, 'trigger', triggerType);
   if (triggerNode) {
-    for (const field of triggerNode.outputs) {
+    for (const field of triggerNode.outputs ?? []) {
       options.push({
         token: `{{ trigger.${field.key} }}`,
         reference: `trigger.${field.key}`,
@@ -96,7 +105,7 @@ export function buildUpstreamOutputs(
   for (const ancestor of ancestorReactions) {
     const reactionNode = findNodeByType(about, 'reaction', ancestor.type);
     if (!reactionNode) continue;
-    for (const field of reactionNode.outputs) {
+    for (const field of reactionNode.outputs ?? []) {
       options.push({
         token: `{{ ${ancestor.id}.${field.key} }}`,
         reference: `${ancestor.id}.${field.key}`,
