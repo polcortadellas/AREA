@@ -51,7 +51,7 @@ paths:
       description: |
         Generated from the node registry, so a new connector appears here
         without editing this route. Follows the format of the subject and adds
-        the inputs and outputs of each node. **Planned (M-06).**
+        the inputs and outputs of each node.
       security: []
       responses:
         "200":
@@ -593,8 +593,12 @@ components:
               example: 10.101.53.35
         server:
           type: object
-          required: [current_time, services]
+          required: [schema_version, current_time, services]
           properties:
+            schema_version:
+              type: integer
+              description: Version of this document's format; it changes only when a change would break clients.
+              example: 1
             current_time:
               type: integer
               format: int64

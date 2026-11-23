@@ -150,6 +150,7 @@ func runAPI(ctx context.Context, addr string) error {
 	})
 	mux.Handle("POST /workflows", tokens.RequireAuth(api.CreateWorkflow(registry)))
 	mux.Handle("POST /workflows/{workflowId}/trigger", tokens.RequireAuth(api.TriggerWorkflow(pool, runQueue)))
+	mux.Handle("GET /about.json", api.About(registry))
 	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
 	mux.Handle("GET /docs", api.Docs())
 
