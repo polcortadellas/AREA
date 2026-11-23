@@ -58,6 +58,18 @@ func (f *fakeProvider) allowCode(code string, consent *url.URL) {
 	f.codes[code] = consent.Query().Get("code_challenge")
 }
 
+func (f *fakeProvider) allowRefresh(token string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.refresh[token] = true
+}
+
+func (f *fakeProvider) refreshes() int {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	return f.refreshCalls
+}
+
 func (f *fakeProvider) token(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseForm(); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -266,4 +278,9 @@ func findCookie(cookies []*http.Cookie, name string) *http.Cookie {
 		}
 	}
 	return nil
+}
+
+func at(d time.Duration) *time.Time {
+	v := time.Now().Add(d)
+	return &v
 }
