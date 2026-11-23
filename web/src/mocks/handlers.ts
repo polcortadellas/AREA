@@ -1,9 +1,21 @@
+import { getAuthMock } from '@/shared/api/generated/auth/auth.msw';
+import { getRunsMock } from '@/shared/api/generated/runs/runs.msw';
+import { getServicesMock } from '@/shared/api/generated/services/services.msw';
+import { getSystemMock } from '@/shared/api/generated/system/system.msw';
+import { getWorkflowsMock } from '@/shared/api/generated/workflows/workflows.msw';
 import { aboutHandlers } from './handlers/about';
+import { workflowHandlers } from './handlers/workflows';
 
 /**
  * Every mock handler, shared by the browser worker (dev) and the Node server (tests).
- * After `npm run api:gen`, spread the generated ones in here, e.g.
- * `...getWorkflowsMock()` from '@/shared/api/generated/workflows/workflows.msw'.
- * Hand-written handlers listed first win over generated ones.
+ * Hand-written handlers listed first win over the generated ones (`npm run api:gen`).
  */
-export const handlers = [...aboutHandlers];
+export const handlers = [
+  ...aboutHandlers,
+  ...workflowHandlers,
+  ...getSystemMock(),
+  ...getAuthMock(),
+  ...getServicesMock(),
+  ...getWorkflowsMock(),
+  ...getRunsMock(),
+];
