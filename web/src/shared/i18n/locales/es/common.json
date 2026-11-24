@@ -14,7 +14,8 @@
     "dashboard": "Panel",
     "login": "Iniciar sesión",
     "register": "Registrarse",
-    "logout": "Cerrar sesión"
+    "logout": "Cerrar sesión",
+    "services": "Servicios"
   },
   "dashboard": {
     "title": "Tus flujos de trabajo"
@@ -59,6 +60,31 @@
       "invalidToken": "Este enlace no es válido, ya se ha usado o ha caducado. Regístrate de nuevo para recibir otro.",
       "invalidEmail": "Introduce un correo electrónico válido.",
       "weakPassword": "Usa entre 8 y 128 caracteres.",
+      "network": "No se puede contactar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+      "unknown": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
+  "services": {
+    "title": "Servicios vinculados",
+    "description": "Vincula las cuentas sobre las que actúan tus flujos. Puedes desvincularlas cuando quieras.",
+    "empty": "Ningún servicio de este servidor necesita una cuenta vinculada.",
+    "loadError": "No se han podido cargar los servicios. Recarga la página para intentarlo de nuevo.",
+    "notLinked": "Sin vincular",
+    "linkedOn": "Vinculado el {{date}}",
+    "scopes": "Permisos: {{scopes}}",
+    "link": "Vincular {{service}}",
+    "linking": "Abriendo {{service}}…",
+    "unlink": "Desvincular {{service}}",
+    "unlinking": "Desvinculando…",
+    "callback": {
+      "linked": "{{service}} se ha vinculado.",
+      "accessDenied": "Se canceló la vinculación en la página del proveedor.",
+      "invalidState": "El enlace ha caducado o se inició en otro navegador. Inténtalo de nuevo.",
+      "linkFailed": "No se ha podido vincular el servicio. Inténtalo de nuevo."
+    },
+    "errors": {
+      "notConfigured": "Este servicio aún no está configurado en este servidor.",
+      "notLinked": "Este servicio ya estaba desvinculado.",
       "network": "No se puede contactar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
       "unknown": "Algo salió mal. Inténtalo de nuevo."
     }
