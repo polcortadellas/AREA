@@ -64,6 +64,12 @@ func (f *fakeProvider) allowRefresh(token string) {
 	f.refresh[token] = true
 }
 
+func (f *fakeProvider) setUnavailable(v bool) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.unavailable = v
+}
+
 func (f *fakeProvider) refreshes() int {
 	f.mu.Lock()
 	defer f.mu.Unlock()

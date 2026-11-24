@@ -78,3 +78,120 @@ func TestCredentialsErrors(t *testing.T) {
 		t.Errorf("revoked refresh token kept: %q", r.RefreshTokenEnc)
 	}
 }
+
+func TestRefreshDueRefreshesOnlyTokensExpiringSoon(t *testing.T) {
+	e := setup(t)
+	other, _ := e.newUser(t, "other@example.com")
+	e.fake.allowRefresh("rt-soon")
+	e.fake.allowRefresh("rt-later")
+	e.seed(t, e.user, "github", "soon", "rt-soon", at(5*time.Minute))
+	e.seed(t, other, "github", "later", "rt-later", at(time.Hour))
+	e.seed(t, other, "google", "no-expiry", "", nil)
+
+	n, err := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow))
+
+	if err != nil || n != 1 {
+		t.Fatalf("refreshed %d, %v; want 1", n, err)
+	}
+	if string(e.row(t, e.user, "github").AccessTokenEnc) != "at-1" || string(e.row(t, other, "github").AccessTokenEnc) != "later" {
+		t.Error("wrong tokens refreshed")
+	}
+}
+
+func TestRefreshDueSweepsInParallelRefreshEachTokenOnce(t *testing.T) {
+	e := setup(t)
+	e.fake.allowRefresh("rt-seed")
+	e.seed(t, e.user, "github", "soon", "rt-seed", at(time.Minute))
+
+	var wg sync.WaitGroup
+	for range 5 {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if _, err := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow)); err != nil {
+				t.Error(err)
+			}
+		}()
+	}
+	wg.Wait()
+
+	if n := e.fake.refreshes(); n != 1 {
+		t.Errorf("%d refreshes, want 1", n)
+	}
+}
+
+func TestRefreshDueKeepsGoingAfterAFailure(t *testing.T) {
+	e := setup(t)
+	other, _ := e.newUser(t, "other@example.com")
+	e.fake.allowRefresh("rt-good")
+	e.seed(t, e.user, "github", "revoked", "rt-revoked", at(time.Minute))
+	e.seed(t, other, "github", "good", "rt-good", at(2*time.Minute))
+
+	n, err := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow))
+
+	if err != nil || n != 1 {
+		t.Fatalf("refreshed %d, %v; want 1", n, err)
+	}
+	if r := e.row(t, e.user, "github"); r.RefreshTokenEnc != nil {
+		t.Errorf("revoked refresh token kept: %q", r.RefreshTokenEnc)
+	}
+}
+
+func TestRefreshDueKeepsTheRefreshTokenWhenTheProviderIsDown(t *testing.T) {
+	e := setup(t)
+	e.fake.allowRefresh("rt-seed")
+	e.fake.setUnavailable(true)
+	e.seed(t, e.user, "github", "soon", "rt-seed", at(time.Minute))
+
+	n, err := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow))
+
+	if err != nil || n != 0 {
+		t.Fatalf("refreshed %d, %v; want 0", n, err)
+	}
+	if r := e.row(t, e.user, "github"); string(r.RefreshTokenEnc) != "rt-seed" {
+		t.Errorf("refresh token = %q, want rt-seed kept for the next sweep", r.RefreshTokenEnc)
+	}
+
+	e.fake.setUnavailable(false)
+	if n, _ := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow)); n != 1 {
+		t.Errorf("after recovery refreshed %d, want 1", n)
+	}
+}
+
+func TestRunRefresherSweepsAtStartAndStopsWithContext(t *testing.T) {
+	e := setup(t)
+	e.fake.allowRefresh("rt-seed")
+	e.seed(t, e.user, "github", "soon", "rt-seed", at(time.Minute))
+	ctx, cancel := context.WithCancel(context.Background())
+	done := make(chan struct{})
+
+	go func() {
+		e.svc.RunRefresher(ctx)
+		close(done)
+	}()
+
+	deadline := time.Now().Add(5 * time.Second)
+	for e.fake.refreshes() == 0 && time.Now().Before(deadline) {
+		time.Sleep(20 * time.Millisecond)
+	}
+	cancel()
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("RunRefresher did not stop")
+	}
+	if n := e.fake.refreshes(); n != 1 {
+		t.Errorf("%d refreshes, want 1", n)
+	}
+}
+
+func TestRefreshDueSkipsServicesWithoutProvider(t *testing.T) {
+	e := setup(t)
+	e.seed(t, e.user, "spotify", "soon", "rt-x", at(time.Minute))
+
+	n, err := e.svc.RefreshDue(context.Background(), time.Now().Add(refreshWindow))
+
+	if err != nil || n != 0 {
+		t.Errorf("refreshed %d, %v; want 0", n, err)
+	}
+}
