@@ -119,7 +119,7 @@ func (s *Service) handleCallback(w http.ResponseWriter, r *http.Request) {
 	q := r.URL.Query()
 	p, known := s.providers[name]
 	if !known {
-		httpjson.Error(w, http.StatusBadRequest, "invalid_state")
+		s.backToWeb(w, r, "error", "invalid_state")
 		return
 	}
 	pending, err := s.takePending(r.Context(), q.Get("state"))
@@ -128,7 +128,7 @@ func (s *Service) handleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if err != nil || pending.Service != name || !bindingMatches(r, pending.BindingHash) {
-		httpjson.Error(w, http.StatusBadRequest, "invalid_state")
+		s.backToWeb(w, r, "error", "invalid_state")
 		return
 	}
 	s.setBinding(w, name, "", -1)

@@ -41,7 +41,6 @@ import type {
 
 import type {
   AuthorizeUrl,
-  Error,
   LinkedService,
   NotFoundResponse,
   ServiceCallbackParams,
@@ -300,7 +299,7 @@ export const getServiceCallbackQueryKey = (service: string,
     }
 
 
-export const getServiceCallbackQueryOptions = <TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(service: string,
+export const getServiceCallbackQueryOptions = <TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -320,7 +319,7 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ServiceCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof serviceCallback>>>
-export type ServiceCallbackQueryError = ErrorType<void | Error>
+export type ServiceCallbackQueryError = ErrorType<void>
 
 
 /**
@@ -329,7 +328,7 @@ export type ServiceCallbackQueryError = ErrorType<void | Error>
  * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -346,7 +345,7 @@ export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCall
  * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -363,7 +362,7 @@ export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCall
  * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -374,7 +373,7 @@ export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCall
  * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient

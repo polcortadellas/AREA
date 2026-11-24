@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"testing"
 	"time"
@@ -118,9 +119,7 @@ func TestCallbackRejectsBadState(t *testing.T) {
 
 			rec := e.callback(t, service, q, cookies...)
 
-			if rec.Code != http.StatusBadRequest || !hasError(rec.Body.Bytes(), "invalid_state") {
-				t.Errorf("status %d, body %s; want 400 invalid_state", rec.Code, rec.Body)
-			}
+			assertRedirectedWithError(t, rec, "invalid_state")
 			assertNotLinked(t, e)
 		})
 	}
@@ -135,9 +134,7 @@ func TestCallbackKeepsTheBindingCookieWhenRejecting(t *testing.T) {
 	for _, service := range []string{"github", "unknown"} {
 		rec := e.callback(t, service, url.Values{"state": {"forged"}}, binding)
 
-		if rec.Code != http.StatusBadRequest {
-			t.Errorf("%s: status %d, want 400", service, rec.Code)
-		}
+		assertRedirectedWithError(t, rec, "invalid_state")
 		if c := findCookie(rec.Result().Cookies(), bindingCookie); c != nil {
 			t.Errorf("%s: binding cookie changed: %+v", service, c)
 		}
@@ -169,9 +166,7 @@ func TestCallbackStateIsSingleUse(t *testing.T) {
 
 	rec := e.callback(t, "github", q, binding)
 
-	if rec.Code != http.StatusBadRequest {
-		t.Errorf("replayed callback: status %d, want 400", rec.Code)
-	}
+	assertRedirectedWithError(t, rec, "invalid_state")
 }
 
 func TestCallbackRedirectsWithErrorWhenLinkingFails(t *testing.T) {
@@ -192,9 +187,7 @@ func TestCallbackRedirectsWithErrorWhenLinkingFails(t *testing.T) {
 
 			rec := e.callback(t, "github", tt.query(consent.Query().Get("state")), binding)
 
-			if want := "http://web.test/services?error=" + tt.want; rec.Code != http.StatusFound || rec.Header().Get("Location") != want {
-				t.Errorf("status %d, Location %q; want 302 to %q", rec.Code, rec.Header().Get("Location"), want)
-			}
+			assertRedirectedWithError(t, rec, tt.want)
 			assertNotLinked(t, e)
 		})
 	}
@@ -244,11 +237,12 @@ func TestUnlinkDeletesTheTokens(t *testing.T) {
 	assertNotLinked(t, e)
 }
 
-func hasError(body []byte, code string) bool {
-	var v struct {
-		Error string `json:"error"`
+func assertRedirectedWithError(t *testing.T, rec *httptest.ResponseRecorder, code string) {
+	t.Helper()
+	want := "http://web.test/services?error=" + code
+	if rec.Code != http.StatusFound || rec.Header().Get("Location") != want {
+		t.Errorf("status %d, Location %q; want 302 to %q", rec.Code, rec.Header().Get("Location"), want)
 	}
-	return json.Unmarshal(body, &v) == nil && v.Error == code
 }
 
 func assertNotLinked(t *testing.T, e *testEnv) {

@@ -279,21 +279,16 @@ paths:
         "302":
           description: |
             Redirect to the services page of the web client, with
-            `?linked=<service>`, or `?error=access_denied` (the user refused)
-            or `?error=link_failed` (any other failure).
+            `?linked=<service>`, `?error=access_denied` (the user refused),
+            `?error=invalid_state` (missing, unknown, expired or already used
+            `state`, a `state` started for another service, or a browser
+            without the `area_oauth_binding` cookie set by the authorize route;
+            nothing is linked and the cookie is left as it was) or
+            `?error=link_failed` (any other failure).
           headers:
             Location:
               schema:
                 type: string
-        "400":
-          description: |
-            Missing, unknown, expired or already used `state`, a `state` started
-            for another service, or a browser without the `area_oauth_binding`
-            cookie set by the authorize route (`invalid_state`).
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
 
   /services/{service}:
     delete:
