@@ -5,6 +5,7 @@ import { getSystemMock } from '@/shared/api/generated/system/system.msw';
 import { getWorkflowsMock } from '@/shared/api/generated/workflows/workflows.msw';
 import { aboutHandlers } from './handlers/about';
 import { authHandlers } from './handlers/auth';
+import { workflowHandlers } from './handlers/workflows';
 
 /**
  * Every mock handler, shared by the browser worker (dev) and the Node server (tests).
@@ -13,6 +14,7 @@ import { authHandlers } from './handlers/auth';
 export const handlers = [
   ...aboutHandlers,
   ...authHandlers,
+  ...workflowHandlers,
   ...getSystemMock(),
   ...getAuthMock(),
   ...getServicesMock(),
