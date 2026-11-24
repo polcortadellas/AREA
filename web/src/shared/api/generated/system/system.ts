@@ -173,7 +173,7 @@ export const getGetAboutUrl = () => {
 /**
  * Generated from the node registry, so a new connector appears here
  * without editing this route. Follows the format of the subject and adds
- * the inputs and outputs of each node. **Planned (M-06).**
+ * the inputs and outputs of each node.
  * @summary List the services, actions and reactions
  */
 export const getAbout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<About> => {
@@ -223,7 +223,7 @@ export type GetAboutQueryError = ErrorType<unknown>
 /**
  * Generated from the node registry, so a new connector appears here
  * without editing this route. Follows the format of the subject and adds
- * the inputs and outputs of each node. **Planned (M-06).**
+ * the inputs and outputs of each node.
  * @summary List the services, actions and reactions
  */
 export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError = ErrorType<unknown>>(
@@ -239,7 +239,7 @@ export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError
 /**
  * Generated from the node registry, so a new connector appears here
  * without editing this route. Follows the format of the subject and adds
- * the inputs and outputs of each node. **Planned (M-06).**
+ * the inputs and outputs of each node.
  * @summary List the services, actions and reactions
  */
 export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError = ErrorType<unknown>>(
@@ -255,7 +255,7 @@ export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError
 /**
  * Generated from the node registry, so a new connector appears here
  * without editing this route. Follows the format of the subject and adds
- * the inputs and outputs of each node. **Planned (M-06).**
+ * the inputs and outputs of each node.
  * @summary List the services, actions and reactions
  */
 export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError = ErrorType<unknown>>(
@@ -265,7 +265,7 @@ export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError
 /**
  * Generated from the node registry, so a new connector appears here
  * without editing this route. Follows the format of the subject and adds
- * the inputs and outputs of each node. **Planned (M-06).**
+ * the inputs and outputs of each node.
  * @summary List the services, actions and reactions
  */
 export function useGetAbout<TData = Awaited<ReturnType<typeof getAbout>>, TError = ErrorType<unknown>>(
