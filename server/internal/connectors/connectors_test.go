@@ -20,6 +20,23 @@ func TestRegisterBuildsTheCatalogue(t *testing.T) {
 	}
 }
 
+// The web client offers to link the services that /about.json marks as OAuth2.
+func TestOAuthServicesAreMarked(t *testing.T) {
+	r := node.NewRegistry()
+	Register(r)
+
+	oauth := map[string]bool{}
+	for _, s := range r.Services() {
+		oauth[s.Name] = s.OAuth2
+	}
+	if !oauth["github"] {
+		t.Error("github is not registered as an OAuth2 service")
+	}
+	if oauth["discord"] || oauth["dummy"] {
+		t.Error("only services that need a linked account should be marked OAuth2")
+	}
+}
+
 func TestEveryNodeIsDescribed(t *testing.T) {
 	r := node.NewRegistry()
 	Register(r)
