@@ -112,21 +112,26 @@ func (s *Service) handleAuthorize(w http.ResponseWriter, r *http.Request) {
 // handleCallback is reached by the browser coming back from the provider. The
 // session cookie is SameSite=Strict, so it is not sent here: the state says
 // who started the link, and the binding cookie proves it is the same browser.
+// The cookie is cleared only once both match, so another site sending the
+// browser here with a made-up state cannot cancel a link in progress.
 func (s *Service) handleCallback(w http.ResponseWriter, r *http.Request) {
 	name := r.PathValue("service")
 	q := r.URL.Query()
-	s.setBinding(w, name, "", -1)
-
+	p, known := s.providers[name]
+	if !known {
+		httpjson.Error(w, http.StatusBadRequest, "invalid_state")
+		return
+	}
 	pending, err := s.takePending(r.Context(), q.Get("state"))
 	if err != nil && !errors.Is(err, errInvalidState) {
 		internalError(w, "callback", err)
 		return
 	}
-	p, known := s.providers[name]
-	if err != nil || !known || pending.Service != name || !bindingMatches(r, pending.BindingHash) {
+	if err != nil || pending.Service != name || !bindingMatches(r, pending.BindingHash) {
 		httpjson.Error(w, http.StatusBadRequest, "invalid_state")
 		return
 	}
+	s.setBinding(w, name, "", -1)
 
 	if e := q.Get("error"); e != "" {
 		s.backToWeb(w, r, "error", callbackError(e))

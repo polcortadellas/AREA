@@ -126,6 +126,24 @@ func TestCallbackRejectsBadState(t *testing.T) {
 	}
 }
 
+// Another site can send the browser to the callback with a made-up state: that
+// must not wipe the binding cookie of a linking attempt still in progress.
+func TestCallbackKeepsTheBindingCookieWhenRejecting(t *testing.T) {
+	e := setup(t)
+	_, binding := e.authorize(t, "github")
+
+	for _, service := range []string{"github", "unknown"} {
+		rec := e.callback(t, service, url.Values{"state": {"forged"}}, binding)
+
+		if rec.Code != http.StatusBadRequest {
+			t.Errorf("%s: status %d, want 400", service, rec.Code)
+		}
+		if c := findCookie(rec.Result().Cookies(), bindingCookie); c != nil {
+			t.Errorf("%s: binding cookie changed: %+v", service, c)
+		}
+	}
+}
+
 func TestCallbackStateIsSingleUse(t *testing.T) {
 	e := setup(t)
 	consent, binding := e.authorize(t, "github")
