@@ -145,7 +145,17 @@ func runAPI(ctx context.Context, addr string) error {
 	apiBaseURL := envOr("API_BASE_URL", "http://localhost:8080")
 	linker := oauth.New(pool, redisClient, oauth.ProvidersFromEnv(os.Getenv, apiBaseURL), webBaseURL, apiBaseURL)
 	slog.Info("oauth providers", "configured", linker.Configured())
-	go linker.RunRefresher(ctx)
+	// Stopped and awaited before the deferred closes of the pool and Redis.
+	refreshCtx, stopRefresh := context.WithCancel(ctx)
+	refreshDone := make(chan struct{})
+	go func() {
+		defer close(refreshDone)
+		linker.RunRefresher(refreshCtx)
+	}()
+	defer func() {
+		stopRefresh()
+		<-refreshDone
+	}()
 
 	registry := node.NewRegistry()
 	connectors.Register(registry)
