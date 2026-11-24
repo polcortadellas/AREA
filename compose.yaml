@@ -36,6 +36,8 @@ services:
     environment:
       <<: *server-env
       ROLE: scheduler
+      SCHEDULER_LOCK_RETRY: ${SCHEDULER_LOCK_RETRY:-500ms}
+      SCHEDULER_POLL_EVERY: ${SCHEDULER_POLL_EVERY:-30s}
 
   worker:
     <<: *server
