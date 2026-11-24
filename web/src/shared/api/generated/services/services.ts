@@ -41,7 +41,6 @@ import type {
 
 import type {
   AuthorizeUrl,
-  Error,
   LinkedService,
   NotFoundResponse,
   ServiceCallbackParams,
@@ -80,7 +79,6 @@ export const getListServicesUrl = () => {
 }
 
 /**
- * **Planned (M-14).**
  * @summary List the services linked to the user
  */
 export const listServices = async ( options?: Parameters<typeof apiFetch>[1]): Promise<LinkedService[]> => {
@@ -127,10 +125,7 @@ export type ListServicesQueryResult = NonNullable<Awaited<ReturnType<typeof list
 export type ListServicesQueryError = ErrorType<UnauthorizedResponse>
 
 
-/**
- * **Planned (M-14).**
- * @summary List the services linked to the user
- */
+/** @summary List the services linked to the user */
 export function useListServices<TData = Awaited<ReturnType<typeof listServices>>, TError = ErrorType<UnauthorizedResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listServices>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -141,10 +136,7 @@ export function useListServices<TData = Awaited<ReturnType<typeof listServices>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-14).**
- * @summary List the services linked to the user
- */
+/** @summary List the services linked to the user */
 export function useListServices<TData = Awaited<ReturnType<typeof listServices>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listServices>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -155,18 +147,12 @@ export function useListServices<TData = Awaited<ReturnType<typeof listServices>>
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-14).**
- * @summary List the services linked to the user
- */
+/** @summary List the services linked to the user */
 export function useListServices<TData = Awaited<ReturnType<typeof listServices>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listServices>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-14).**
- * @summary List the services linked to the user
- */
+/** @summary List the services linked to the user */
 export function useListServices<TData = Awaited<ReturnType<typeof listServices>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listServices>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -193,9 +179,11 @@ export const getAuthorizeServiceUrl = (service: string,) => {
 }
 
 /**
- * Returns the provider's consent page. The client opens it in the
- * browser; the provider then redirects to the callback route.
- * **Planned (M-14).**
+ * Returns the provider's consent page (OAuth2 authorization code with
+ * PKCE). The client opens it in the same browser; the provider then
+ * redirects to the callback route. Only services whose OAuth app is
+ * configured on the server are accepted. The consent URL is valid for
+ * 10 minutes and can be used once.
  * @summary Start linking a service
  */
 export const authorizeService = async (service: string, options?: Parameters<typeof apiFetch>[1]): Promise<AuthorizeUrl> => {
@@ -248,9 +236,11 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type AuthorizeServiceMutationVariables = {service: string}
 
     /**
- * Returns the provider's consent page. The client opens it in the
- * browser; the provider then redirects to the callback route.
- * **Planned (M-14).**
+ * Returns the provider's consent page (OAuth2 authorization code with
+ * PKCE). The client opens it in the same browser; the provider then
+ * redirects to the callback route. Only services whose OAuth app is
+ * configured on the server are accepted. The consent URL is valid for
+ * 10 minutes and can be used once.
  * @summary Start linking a service
  */
 export const useAuthorizeService = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
@@ -281,8 +271,8 @@ export const useAuthorizeService = <TError = ErrorType<UnauthorizedResponse | No
 
 /**
  * Called by the browser after the consent page, not by the clients.
- * Stores the tokens (encrypted) and redirects to the web client.
- * **Planned (M-14).**
+ * Stores the tokens and redirects to the web client. The server renews
+ * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
 export const serviceCallback = async (service: string,
@@ -309,7 +299,7 @@ export const getServiceCallbackQueryKey = (service: string,
     }
 
 
-export const getServiceCallbackQueryOptions = <TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(service: string,
+export const getServiceCallbackQueryOptions = <TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -329,16 +319,16 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ServiceCallbackQueryResult = NonNullable<Awaited<ReturnType<typeof serviceCallback>>>
-export type ServiceCallbackQueryError = ErrorType<void | Error>
+export type ServiceCallbackQueryError = ErrorType<void>
 
 
 /**
  * Called by the browser after the consent page, not by the clients.
- * Stores the tokens (encrypted) and redirects to the web client.
- * **Planned (M-14).**
+ * Stores the tokens and redirects to the web client. The server renews
+ * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -351,11 +341,11 @@ export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCall
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * Called by the browser after the consent page, not by the clients.
- * Stores the tokens (encrypted) and redirects to the web client.
- * **Planned (M-14).**
+ * Stores the tokens and redirects to the web client. The server renews
+ * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -368,22 +358,22 @@ export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCall
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * Called by the browser after the consent page, not by the clients.
- * Stores the tokens (encrypted) and redirects to the web client.
- * **Planned (M-14).**
+ * Stores the tokens and redirects to the web client. The server renews
+ * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 /**
  * Called by the browser after the consent page, not by the clients.
- * Stores the tokens (encrypted) and redirects to the web client.
- * **Planned (M-14).**
+ * Stores the tokens and redirects to the web client. The server renews
+ * expiring access tokens in the background while the service is linked.
  * @summary OAuth2 callback of the provider
  */
-export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void | Error>>(
+export function useServiceCallback<TData = Awaited<ReturnType<typeof serviceCallback>>, TError = ErrorType<void>>(
  service: string,
     params: ServiceCallbackParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof serviceCallback>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -410,7 +400,7 @@ export const getUnlinkServiceUrl = (service: string,) => {
 }
 
 /**
- * Deletes the stored tokens. **Planned (M-14).**
+ * Deletes the stored tokens.
  * @summary Unlink a service
  */
 export const unlinkService = async (service: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
@@ -463,7 +453,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UnlinkServiceMutationVariables = {service: string}
 
     /**
- * Deletes the stored tokens. **Planned (M-14).**
+ * Deletes the stored tokens.
  * @summary Unlink a service
  */
 export const useUnlinkService = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,

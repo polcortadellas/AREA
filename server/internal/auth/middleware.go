@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/polcortadellas/AREA/server/internal/httpjson"
 )
 
 const (
@@ -29,7 +30,7 @@ func (t *Tokens) RequireAuth(next http.Handler) http.Handler {
 			return
 		}
 		if fromCookie && !isSafeMethod(r.Method) && r.Header.Get(CSRFHeader) == "" {
-			writeError(w, http.StatusForbidden, "csrf_header_required")
+			httpjson.Error(w, http.StatusForbidden, "csrf_header_required")
 			return
 		}
 		next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxKey{}, id)))
@@ -61,5 +62,5 @@ func isSafeMethod(m string) bool {
 
 func unauthorized(w http.ResponseWriter) {
 	w.Header().Set("WWW-Authenticate", `Bearer realm="area"`)
-	writeError(w, http.StatusUnauthorized, "unauthorized")
+	httpjson.Error(w, http.StatusUnauthorized, "unauthorized")
 }
