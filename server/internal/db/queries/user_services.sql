@@ -26,6 +26,7 @@ FOR UPDATE;
 SELECT * FROM user_services
 WHERE refresh_token_enc IS NOT NULL
   AND expires_at < sqlc.arg(before)
+  AND service = ANY(sqlc.arg(services)::text[])
   AND NOT (id = ANY(sqlc.arg(skip)::uuid[]))
 ORDER BY expires_at
 LIMIT 1

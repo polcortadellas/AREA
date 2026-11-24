@@ -95,11 +95,12 @@ func (s *Service) Credentials(ctx context.Context, userID uuid.UUID, service str
 	return node.Credentials{AccessToken: access}, nil
 }
 
-// RefreshDue renews every token that expires before the given time, one row
-// per transaction. SKIP LOCKED lets several API replicas sweep at once without
-// renewing a token twice. Failures are logged and the sweep moves on; the
-// returned count is the number of tokens renewed.
+// RefreshDue renews every token of a configured provider that expires before
+// the given time, one row per transaction. SKIP LOCKED lets several API
+// replicas sweep at once without renewing a token twice. Failures are logged
+// and the sweep moves on; the returned count is the number of tokens renewed.
 func (s *Service) RefreshDue(ctx context.Context, before time.Time) (int, error) {
+	services := s.Configured()
 	skip := []uuid.UUID{} // not nil: ANY(NULL) would match no row
 	refreshed := 0
 	for {
@@ -107,7 +108,9 @@ func (s *Service) RefreshDue(ctx context.Context, before time.Time) (int, error)
 		if err != nil {
 			return refreshed, fmt.Errorf("begin: %w", err)
 		}
-		row, err := s.q.WithTx(tx).LockNextExpiringUserService(ctx, sqlc.LockNextExpiringUserServiceParams{Before: &before, Skip: skip})
+		row, err := s.q.WithTx(tx).LockNextExpiringUserService(ctx, sqlc.LockNextExpiringUserServiceParams{
+			Before: &before, Services: services, Skip: skip,
+		})
 		if err != nil {
 			_ = tx.Rollback(ctx)
 			if errors.Is(err, pgx.ErrNoRows) {

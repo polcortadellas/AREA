@@ -65,19 +65,21 @@ const lockNextExpiringUserService = `-- name: LockNextExpiringUserService :one
 SELECT id, user_id, service, access_token_enc, refresh_token_enc, expires_at, scopes, created_at, updated_at FROM user_services
 WHERE refresh_token_enc IS NOT NULL
   AND expires_at < $1
-  AND NOT (id = ANY($2::uuid[]))
+  AND service = ANY($2::text[])
+  AND NOT (id = ANY($3::uuid[]))
 ORDER BY expires_at
 LIMIT 1
 FOR UPDATE SKIP LOCKED
 `
 
 type LockNextExpiringUserServiceParams struct {
-	Before *time.Time
-	Skip   []uuid.UUID
+	Before   *time.Time
+	Services []string
+	Skip     []uuid.UUID
 }
 
 func (q *Queries) LockNextExpiringUserService(ctx context.Context, arg LockNextExpiringUserServiceParams) (UserService, error) {
-	row := q.db.QueryRow(ctx, lockNextExpiringUserService, arg.Before, arg.Skip)
+	row := q.db.QueryRow(ctx, lockNextExpiringUserService, arg.Before, arg.Services, arg.Skip)
 	var i UserService
 	err := row.Scan(
 		&i.ID,
