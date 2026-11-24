@@ -22,6 +22,8 @@ const (
 	// tokens that expire within refreshWindow.
 	refreshEvery  = time.Minute
 	refreshWindow = 10 * time.Minute
+	// persistTimeout bounds saving tokens the provider has already issued.
+	persistTimeout = 5 * time.Second
 )
 
 var (
@@ -181,12 +183,21 @@ func (s *Service) refresh(ctx context.Context, tx pgx.Tx, row sqlc.UserService) 
 	if newRefresh == "" {
 		newRefresh = oldRefresh // providers that do not rotate refresh tokens omit it
 	}
-	if err := q.UpdateUserServiceTokens(ctx, sqlc.UpdateUserServiceTokensParams{
+	saveCtx, cancel := persistContext(ctx)
+	defer cancel()
+	if err := q.UpdateUserServiceTokens(saveCtx, sqlc.UpdateUserServiceTokensParams{
 		ID: row.ID, AccessTokenEnc: sealToken(tok.AccessToken), RefreshTokenEnc: sealToken(newRefresh), ExpiresAt: expiry(tok),
 	}); err != nil {
 		return "", fmt.Errorf("save refreshed %s token: %w", row.Service, err)
 	}
 	return tok.AccessToken, nil
+}
+
+// persistContext ignores cancellation: once the provider has rotated a refresh
+// token, the old one is dead, so a shutdown before the save would force the
+// user to link again.
+func persistContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), persistTimeout)
 }
 
 // endRefresh commits a refresh, including a dropped refresh token, and rolls
@@ -196,7 +207,9 @@ func endRefresh(ctx context.Context, tx pgx.Tx, err error) error {
 		_ = tx.Rollback(ctx)
 		return err
 	}
-	if cerr := tx.Commit(ctx); cerr != nil {
+	commitCtx, cancel := persistContext(ctx)
+	defer cancel()
+	if cerr := tx.Commit(commitCtx); cerr != nil {
 		return fmt.Errorf("commit refresh: %w", cerr)
 	}
 	return err
