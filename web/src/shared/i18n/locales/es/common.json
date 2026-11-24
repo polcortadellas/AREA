@@ -19,7 +19,126 @@
   },
   "dashboard": {
     "title": "Tus flujos de trabajo",
-    "newWorkflow": "Crear flujo de trabajo"
+    "subtitle": "Supervisa, pausa, elimina e inspecciona el historial paso a paso de tus automatizaciones.",
+    "newWorkflow": "Crear flujo de trabajo",
+    "refresh": "Actualizar",
+    "loading": "Cargando flujos de trabajo…",
+    "stats": {
+      "summary": "Resumen de flujos de trabajo",
+      "total": "Total",
+      "active": "Activos",
+      "paused": "Pausados"
+    },
+    "filters": {
+      "label": "Filtrar flujos de trabajo",
+      "searchLabel": "Buscar flujos de trabajo",
+      "searchPlaceholder": "Buscar por nombre de flujo…",
+      "all": "Todos",
+      "active": "Activos",
+      "paused": "Pausados",
+      "clear": "Limpiar filtros"
+    },
+    "status": {
+      "active": "Activo",
+      "paused": "Pausado"
+    },
+    "card": {
+      "pausedNotice": "Pausado — el sondeo está detenido y no se iniciarán futuras ejecuciones.",
+      "updatedAt": "Actualizado {{date}}",
+      "createdAt": "Creado {{date}}",
+      "toggleLabel": "Estado activo de {{name}}",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "pausing": "Pausando…",
+      "resuming": "Reanudando…",
+      "runNow": "Ejecutar ahora",
+      "running": "Encolando…",
+      "runNowDisabledPaused": "Reanuda este flujo antes de ejecutarlo.",
+      "history": "Historial de ejecución",
+      "edit": "Editar",
+      "delete": "Eliminar",
+      "deleting": "Eliminando…",
+      "deleteConfirmTitle": "¿Eliminar «{{name}}»?",
+      "deleteConfirmDescription": "Esto elimina permanentemente el flujo de trabajo y todo su historial de ejecución.",
+      "deleteConfirm": "Eliminar flujo",
+      "deleteCancel": "Cancelar"
+    },
+    "empty": {
+      "title": "Aún no tienes flujos de trabajo",
+      "description": "Crea tu primer flujo de trabajo para empezar a automatizar disparadores y reacciones.",
+      "filteredTitle": "Ningún flujo coincide",
+      "filteredDescription": "Prueba con otro término de búsqueda o filtro de estado."
+    },
+    "feedback": {
+      "paused": "«{{name}}» pausado. Las ejecuciones futuras se han detenido.",
+      "resumed": "«{{name}}» reanudado. Las ejecuciones futuras están activas.",
+      "deleted": "«{{name}}» eliminado.",
+      "triggered": "Ejecución encolada para «{{name}}»."
+    },
+    "errors": {
+      "loadFailed": "No se pudieron cargar tus flujos de trabajo.",
+      "retry": "Reintentar",
+      "notFound": "No se pudo encontrar este flujo de trabajo o ejecución.",
+      "unauthorized": "Tu sesión ha caducado. Inicia sesión de nuevo.",
+      "network": "No se puede contactar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+      "unknown": "Algo salió mal. Inténtalo de nuevo."
+    },
+    "history": {
+      "backToDashboard": "Volver al panel",
+      "title": "Historial de ejecución",
+      "fallbackName": "Flujo de trabajo",
+      "subtitle": "Inspecciona cada ejecución, datos del disparador, estado de cada paso y su salida.",
+      "runsHeading": "Ejecuciones",
+      "runsCount": "{{count}} mostradas",
+      "limitLabel": "Ejecuciones a mostrar",
+      "loadingRuns": "Cargando historial de ejecución…",
+      "loadRunsError": "No se pudo cargar el historial de ejecución.",
+      "emptyRunsTitle": "Aún no hay ejecuciones",
+      "emptyRunsDescription": "Las ejecuciones aparecerán aquí cuando se active este flujo de trabajo.",
+      "selectRunPrompt": "Selecciona una ejecución para inspeccionar su historial paso a paso.",
+      "loadingRunDetail": "Cargando detalles de los pasos…",
+      "loadRunDetailError": "No se pudieron cargar los detalles de esta ejecución.",
+      "runHeading": "Detalles de la ejecución",
+      "runId": "ID de ejecución",
+      "createdAt": "Encolada",
+      "startedAt": "Iniciada",
+      "finishedAt": "Finalizada",
+      "duration": "Duración",
+      "notAvailable": "—",
+      "runError": "Error de ejecución",
+      "triggerPayload": "Datos del disparador",
+      "emptyPayload": "No se registraron datos del disparador.",
+      "stepsHeading": "Pasos",
+      "stepsCount": "{{count}} pasos",
+      "emptySteps": "Aún no hay pasos registrados para esta ejecución.",
+      "stepNumber": "Paso {{index}}",
+      "nodeId": "Nodo",
+      "attempt": "Intento {{count}}",
+      "notExecuted": "No ejecutado",
+      "output": "Salida",
+      "noOutput": "Sin salida registrada.",
+      "stepError": "Error del paso",
+      "skippedNotice": "Omitido porque esta rama no se ejecutó o falló un paso anterior.",
+      "runStatus": {
+        "PENDING": "Pendiente",
+        "RUNNING": "En curso",
+        "SUCCEEDED": "Completada",
+        "FAILED": "Fallida",
+        "DEAD": "Sin reintentos"
+      },
+      "stepStatus": {
+        "PENDING": "Pendiente",
+        "RUNNING": "En curso",
+        "SUCCEEDED": "Completado",
+        "FAILED": "Fallido",
+        "SKIPPED": "Omitido"
+      },
+      "nodeKind": {
+        "trigger": "Disparador",
+        "condition": "Condición",
+        "reaction": "Reacción"
+      }
+    }
   },
   "builder": {
     "title": "Crear flujo de trabajo",
