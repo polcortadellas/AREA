@@ -33,6 +33,7 @@ import (
 	"github.com/polcortadellas/AREA/server/internal/engine"
 	"github.com/polcortadellas/AREA/server/internal/mail"
 	"github.com/polcortadellas/AREA/server/internal/node"
+	"github.com/polcortadellas/AREA/server/internal/oauth"
 	"github.com/polcortadellas/AREA/server/internal/queue"
 	"github.com/polcortadellas/AREA/server/internal/worker"
 )
@@ -141,11 +142,17 @@ func runAPI(ctx context.Context, addr string) error {
 	defer func() { _ = redisClient.Close() }()
 	runQueue := queue.NewStreams(redisClient)
 
+	apiBaseURL := envOr("API_BASE_URL", "http://localhost:8080")
+	linker := oauth.New(pool, redisClient, oauth.ProvidersFromEnv(os.Getenv, apiBaseURL), webBaseURL, apiBaseURL)
+	slog.Info("oauth providers", "configured", linker.Configured())
+	go linker.RunRefresher(ctx)
+
 	registry := node.NewRegistry()
 	connectors.Register(registry)
 
 	mux := http.NewServeMux()
 	authSvc.Routes(mux)
+	linker.Routes(mux, tokens)
 	mux.HandleFunc("GET /ping", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 		_, _ = w.Write([]byte("pong\n"))
