@@ -39,9 +39,13 @@ func Pool(t *testing.T) *pgxpool.Pool {
 	}
 	t.Cleanup(func() {
 		conn, err := pgx.Connect(context.Background(), base)
-		if err == nil {
-			_, _ = conn.Exec(context.Background(), "DROP DATABASE "+name+" WITH (FORCE)")
-			_ = conn.Close(context.Background())
+		if err != nil {
+			t.Logf("drop %s: %v", name, err)
+			return
+		}
+		defer func() { _ = conn.Close(context.Background()) }()
+		if _, err := conn.Exec(context.Background(), "DROP DATABASE "+name+" WITH (FORCE)"); err != nil {
+			t.Logf("drop %s: %v", name, err)
 		}
 	})
 
