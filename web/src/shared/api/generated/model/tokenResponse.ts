@@ -10,11 +10,19 @@
  * Routes marked **Planned** are part of the MVP contract but not implemented
  * yet; their description names the task that adds them.
  *
+ * Authentication: the Android client sends the access token as
+ * `Authorization: Bearer <token>`. The web client uses the HttpOnly
+ * `area_session` cookie set by `/auth/login` and `/auth/verify-email`, so
+ * scripts never see the token; with the cookie, every request that is not
+ * GET, HEAD or OPTIONS must also send `X-Requested-With`
+ * (`403 {"error": "csrf_header_required"}` otherwise). Request bodies must be
+ * `application/json`.
+ *
  * OpenAPI spec version: 0.1.0
  */
 import type { Token } from './token';
 
 /**
- * Logged in.
+ * Logged in. The same token is set as the session cookie for the web client.
  */
 export type TokenResponse = Token;

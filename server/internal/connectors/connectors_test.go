@@ -13,8 +13,10 @@ func TestRegisterBuildsTheCatalogue(t *testing.T) {
 	if _, ok := r.Trigger("dummy.counter"); !ok {
 		t.Error("dummy.counter is not registered")
 	}
-	if _, ok := r.Reaction("dummy.echo"); !ok {
-		t.Error("dummy.echo is not registered")
+	for _, id := range []string{"dummy.echo", "discord.send_message", "discord.create_forum_thread"} {
+		if _, ok := r.Reaction(id); !ok {
+			t.Errorf("%s is not registered", id)
+		}
 	}
 }
 

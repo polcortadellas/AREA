@@ -5,6 +5,7 @@ import type { About } from '@/shared/api/generated/model';
 export const mockAbout: About = {
   client: { host: '127.0.0.1' },
   server: {
+    schema_version: 1,
     current_time: 1795217823,
     services: [
       {

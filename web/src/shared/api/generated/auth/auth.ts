@@ -10,6 +10,14 @@
  * Routes marked **Planned** are part of the MVP contract but not implemented
  * yet; their description names the task that adds them.
  *
+ * Authentication: the Android client sends the access token as
+ * `Authorization: Bearer <token>`. The web client uses the HttpOnly
+ * `area_session` cookie set by `/auth/login` and `/auth/verify-email`, so
+ * scripts never see the token; with the cookie, every request that is not
+ * GET, HEAD or OPTIONS must also send `X-Requested-With`
+ * (`403 {"error": "csrf_header_required"}` otherwise). Request bodies must be
+ * `application/json`.
+ *
  * OpenAPI spec version: 0.1.0
  */
 import {
@@ -412,3 +420,80 @@ export function useGetMe<TData = Awaited<ReturnType<typeof getMe>>, TError = Err
 
 
 
+export const getLogoutUrl = () => {
+
+
+
+
+  return `/auth/logout`
+}
+
+/**
+ * Deletes the session cookie. Requires `X-Requested-With` so another
+ * site cannot log the user out. The Android client just forgets its token.
+ * @summary Log out of the web client
+ */
+export const logout = async ( options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+
+  return apiFetch<void>(getLogoutUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+
+export const getLogoutMutationKey = () => ['logout'] as const;
+
+export const getLogoutMutationOptions = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext> => {
+
+const mutationKey = getLogoutMutationKey();
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof logout>>, void> = () => {
+
+
+          return  logout(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type LogoutMutationResult = NonNullable<Awaited<ReturnType<typeof logout>>>
+
+    export type LogoutMutationError = ErrorType<Error>
+
+
+    /**
+ * Deletes the session cookie. Requires `X-Requested-With` so another
+ * site cannot log the user out. The Android client just forgets its token.
+ * @summary Log out of the web client
+ */
+export const useLogout = <TError = ErrorType<Error>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof logout>>, TError,void, TContext>, request?: SecondParameter<typeof apiFetch>}
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof logout>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getLogoutMutationOptions(options), queryClient);
+    }

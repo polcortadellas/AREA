@@ -7,11 +7,15 @@
   },
   "layout": {
     "skipToContent": "Saltar al contenido principal",
-    "mainNav": "Principal"
+    "mainNav": "Principal",
+    "loading": "Cargando…"
   },
   "nav": {
     "dashboard": "Panel",
-    "builder": "Nuevo flujo"
+    "builder": "Nuevo flujo",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión"
   },
   "dashboard": {
     "title": "Tus flujos de trabajo",
@@ -97,6 +101,50 @@
       "unknown": "No se pudo guardar el flujo de trabajo. Inténtalo de nuevo."
     }
   },
+  "auth": {
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "passwordHint": "Entre 8 y 128 caracteres.",
+    "signedInAs": "Sesión iniciada como {{email}}",
+    "login": {
+      "title": "Iniciar sesión",
+      "submit": "Iniciar sesión",
+      "submitting": "Iniciando sesión…",
+      "noAccount": "¿Aún no tienes cuenta?",
+      "register": "Registrarse"
+    },
+    "register": {
+      "title": "Crea tu cuenta",
+      "submit": "Registrarse",
+      "submitting": "Registrando…",
+      "haveAccount": "¿Ya tienes cuenta?",
+      "login": "Iniciar sesión"
+    },
+    "checkEmail": {
+      "title": "Revisa tu correo",
+      "description": "Hemos enviado un enlace de confirmación a {{email}}. Ábrelo en las próximas 24 horas para activar tu cuenta.",
+      "existing": "Si ya tienes una cuenta, inicia sesión.",
+      "login": "Ir a iniciar sesión"
+    },
+    "verify": {
+      "title": "Confirma tu correo",
+      "description": "Confirma tu dirección para activar tu cuenta e iniciar sesión.",
+      "submit": "Confirmar mi correo",
+      "submitting": "Confirmando…",
+      "missingToken": "Este enlace está incompleto. Vuelve a abrir el enlace del correo.",
+      "register": "Registrarse de nuevo"
+    },
+    "errors": {
+      "invalidCredentials": "Correo o contraseña incorrectos.",
+      "emailNotVerified": "Primero confirma tu correo con el enlace que te enviamos. Si ha caducado, regístrate de nuevo para recibir otro.",
+      "invalidToken": "Este enlace no es válido, ya se ha usado o ha caducado. Regístrate de nuevo para recibir otro.",
+      "invalidEmail": "Introduce un correo electrónico válido.",
+      "weakPassword": "Usa entre 8 y 128 caracteres.",
+      "network": "No se puede contactar con el servidor. Comprueba tu conexión e inténtalo de nuevo.",
+      "unknown": "Algo salió mal. Inténtalo de nuevo."
+    }
+  },
   "notFound": {
     "title": "Página no encontrada",
     "description": "La página que buscas no existe.",
@@ -110,6 +158,8 @@
   "validation": {
     "required": "Este campo es obligatorio",
     "email": "Introduce un correo electrónico válido",
-    "minLength": "Demasiado corto"
+    "minLength": "Demasiado corto",
+    "passwordLength": "Usa entre 8 y 128 caracteres",
+    "passwordMismatch": "Las contraseñas no coinciden"
   }
 }

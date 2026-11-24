@@ -1,18 +1,21 @@
 import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 
 import { resetMockWorkflows } from '@/mocks/handlers/workflows';
 import { server } from '@/mocks/node';
 import type { About, WorkflowInput } from '@/shared/api/generated/model';
 import { expectNoA11yViolations } from '@/test/axe';
-import { renderRoute } from '@/test/render';
+import { renderRoute, signIn } from '@/test/render';
 
 describe('WorkflowBuilderPage', () => {
+  beforeEach(signIn);
+
   it('renders services, actions, reactions, inputs and output keys dynamically from /about.json with zero hardcoded services', async () => {
     const customAbout: About = {
       client: { host: '127.0.0.1' },
       server: {
+        schema_version: 1,
         current_time: 1795217823,
         services: [
           {

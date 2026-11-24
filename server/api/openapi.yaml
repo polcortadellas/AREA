@@ -10,11 +10,20 @@ info:
 
     Routes marked **Planned** are part of the MVP contract but not implemented
     yet; their description names the task that adds them.
+
+    Authentication: the Android client sends the access token as
+    `Authorization: Bearer <token>`. The web client uses the HttpOnly
+    `area_session` cookie set by `/auth/login` and `/auth/verify-email`, so
+    scripts never see the token; with the cookie, every request that is not
+    GET, HEAD or OPTIONS must also send `X-Requested-With`
+    (`403 {"error": "csrf_header_required"}` otherwise). Request bodies must be
+    `application/json`.
 servers:
   - url: /
     description: The server that serves this document
 security:
   - bearerAuth: []
+  - cookieAuth: []
 tags:
   - name: system
     description: Health check and service discovery.
@@ -51,7 +60,7 @@ paths:
       description: |
         Generated from the node registry, so a new connector appears here
         without editing this route. Follows the format of the subject and adds
-        the inputs and outputs of each node. **Planned (M-06).**
+        the inputs and outputs of each node.
       security: []
       responses:
         "200":
@@ -152,6 +161,37 @@ paths:
                 $ref: "#/components/schemas/User"
         "401":
           $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Log out of the web client
+      description: |
+        Deletes the session cookie. Requires `X-Requested-With` so another
+        site cannot log the user out. The Android client just forgets its token.
+      security: []
+      parameters:
+        - name: X-Requested-With
+          in: header
+          required: true
+          schema:
+            type: string
+            example: XMLHttpRequest
+      responses:
+        "204":
+          description: Logged out.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: area_session=; Path=/; Max-Age=0; HttpOnly; SameSite=Strict
+        "403":
+          description: Missing `X-Requested-With` (`csrf_header_required`).
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /services:
     get:
@@ -478,7 +518,15 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: Access token from `/auth/login` or `/auth/verify-email`.
+      description: Access token from `/auth/login` or `/auth/verify-email` (Android client).
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: area_session
+      description: |
+        HttpOnly, SameSite=Strict cookie set by `/auth/login` and
+        `/auth/verify-email` (web client). Secure when the web client is served
+        over HTTPS.
 
   parameters:
     Service:
@@ -500,20 +548,25 @@ components:
 
   responses:
     Token:
-      description: Logged in.
+      description: Logged in. The same token is set as the session cookie for the web client.
       headers:
         Cache-Control:
           schema:
             type: string
             example: no-store
+        Set-Cookie:
+          schema:
+            type: string
+            example: area_session=<token>; Path=/; Max-Age=3600; HttpOnly; SameSite=Strict
       content:
         application/json:
           schema:
             $ref: "#/components/schemas/Token"
     BadRequest:
       description: |
-        The body is not valid JSON or has unknown fields (`invalid_body`), or
-        a value is rejected, e.g. `invalid_email`, `weak_password`.
+        The body is not `application/json`, not valid JSON or has unknown
+        fields (`invalid_body`), or a value is rejected, e.g. `invalid_email`,
+        `weak_password`.
       content:
         application/json:
           schema:
@@ -593,8 +646,12 @@ components:
               example: 10.101.53.35
         server:
           type: object
-          required: [current_time, services]
+          required: [schema_version, current_time, services]
           properties:
+            schema_version:
+              type: integer
+              description: Version of this document's format; it changes only when a change would break clients.
+              example: 1
             current_time:
               type: integer
               format: int64

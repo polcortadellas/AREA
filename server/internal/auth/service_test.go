@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"testing"
 
@@ -108,6 +109,12 @@ func newTestServer(t *testing.T) *testServer {
 	return &testServer{t: t, mux: mux, mail: mail}
 }
 
+func (s *testServer) send(req *http.Request) *httptest.ResponseRecorder {
+	rec := httptest.NewRecorder()
+	s.mux.ServeHTTP(rec, req)
+	return rec
+}
+
 func (s *testServer) do(method, path, bearer string, body any) (int, map[string]any) {
 	s.t.Helper()
 	var buf bytes.Buffer
@@ -115,11 +122,13 @@ func (s *testServer) do(method, path, bearer string, body any) (int, map[string]
 		_ = json.NewEncoder(&buf).Encode(body)
 	}
 	req := httptest.NewRequestWithContext(s.t.Context(), method, path, &buf)
+	if body != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
 	if bearer != "" {
 		req.Header.Set("Authorization", "Bearer "+bearer)
 	}
-	rec := httptest.NewRecorder()
-	s.mux.ServeHTTP(rec, req)
+	rec := s.send(req)
 	var out map[string]any
 	_ = json.Unmarshal(rec.Body.Bytes(), &out)
 	return rec.Code, out
@@ -225,4 +234,59 @@ func TestMeRejectsDeletedUser(t *testing.T) {
 	if code, _ := s.do("GET", "/auth/me", token, nil); code != http.StatusUnauthorized {
 		t.Fatalf("me for unknown user: status %d, want 401", code)
 	}
+}
+
+// The web client authenticates with an HttpOnly cookie instead of the bearer header.
+func TestSessionCookie(t *testing.T) {
+	s := newTestServer(t)
+	s.do("POST", "/auth/register", "", map[string]string{"email": "carol@example.com", "password": "correct-horse"})
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/verify-email",
+		strings.NewReader(`{"token":"`+s.mail.lastToken(t)+`"}`))
+	req.Header.Set("Content-Type", "application/json")
+	rec := s.send(req)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("verify: status %d", rec.Code)
+	}
+	cookie := sessionCookie(t, rec)
+	if !cookie.HttpOnly || cookie.SameSite != http.SameSiteStrictMode || cookie.Path != "/" || cookie.MaxAge != 3600 {
+		t.Errorf("unsafe session cookie: %+v", cookie)
+	}
+
+	me := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/auth/me", nil)
+	me.AddCookie(cookie)
+	if rec := s.send(me); rec.Code != http.StatusOK {
+		t.Fatalf("me with cookie: status %d", rec.Code)
+	}
+
+	logout := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/logout", nil)
+	if rec := s.send(logout); rec.Code != http.StatusForbidden {
+		t.Errorf("logout without %s: status %d, want 403", CSRFHeader, rec.Code)
+	}
+	logout.Header.Set(CSRFHeader, "XMLHttpRequest")
+	rec = s.send(logout)
+	if rec.Code != http.StatusNoContent || sessionCookie(t, rec).MaxAge >= 0 {
+		t.Errorf("logout: status %d, cookie not deleted", rec.Code)
+	}
+}
+
+func TestRejectsNonJSONBodies(t *testing.T) {
+	s := newTestServer(t)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/auth/login",
+		strings.NewReader(`{"email":"a@example.com","password":"correct-horse"}`))
+	req.Header.Set("Content-Type", "text/plain")
+	if rec := s.send(req); rec.Code != http.StatusBadRequest {
+		t.Fatalf("text/plain login: status %d, want 400", rec.Code)
+	}
+}
+
+func sessionCookie(t *testing.T, rec *httptest.ResponseRecorder) *http.Cookie {
+	t.Helper()
+	for _, c := range rec.Result().Cookies() {
+		if c.Name == SessionCookie {
+			return c
+		}
+	}
+	t.Fatal("no session cookie set")
+	return nil
 }

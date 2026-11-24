@@ -7,11 +7,15 @@
   },
   "layout": {
     "skipToContent": "Skip to main content",
-    "mainNav": "Main"
+    "mainNav": "Main",
+    "loading": "Loading…"
   },
   "nav": {
     "dashboard": "Dashboard",
-    "builder": "New workflow"
+    "builder": "New workflow",
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out"
   },
   "dashboard": {
     "title": "Your workflows",
@@ -97,6 +101,50 @@
       "unknown": "Could not save the workflow. Please try again."
     }
   },
+  "auth": {
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "passwordHint": "8 to 128 characters.",
+    "signedInAs": "Signed in as {{email}}",
+    "login": {
+      "title": "Log in",
+      "submit": "Log in",
+      "submitting": "Logging in…",
+      "noAccount": "No account yet?",
+      "register": "Sign up"
+    },
+    "register": {
+      "title": "Create your account",
+      "submit": "Sign up",
+      "submitting": "Signing up…",
+      "haveAccount": "Already have an account?",
+      "login": "Log in"
+    },
+    "checkEmail": {
+      "title": "Check your email",
+      "description": "We sent a confirmation link to {{email}}. Open it within 24 hours to activate your account.",
+      "existing": "If you already have an account, log in instead.",
+      "login": "Go to log in"
+    },
+    "verify": {
+      "title": "Confirm your email",
+      "description": "Confirm your address to activate your account and log in.",
+      "submit": "Confirm my email",
+      "submitting": "Confirming…",
+      "missingToken": "This link is incomplete. Open the link from the email again.",
+      "register": "Sign up again"
+    },
+    "errors": {
+      "invalidCredentials": "Wrong email or password.",
+      "emailNotVerified": "Confirm your email first with the link we sent you. If it expired, sign up again to get a new one.",
+      "invalidToken": "This link is invalid, already used or expired. Sign up again to get a new one.",
+      "invalidEmail": "Enter a valid email address.",
+      "weakPassword": "Use 8 to 128 characters.",
+      "network": "Cannot reach the server. Check your connection and try again.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
   "notFound": {
     "title": "Page not found",
     "description": "The page you are looking for does not exist.",
@@ -110,6 +158,8 @@
   "validation": {
     "required": "This field is required",
     "email": "Enter a valid email address",
-    "minLength": "Too short"
+    "minLength": "Too short",
+    "passwordLength": "Use 8 to 128 characters",
+    "passwordMismatch": "Passwords do not match"
   }
 }

@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"strings"
 	"syscall"
 	"time"
 
@@ -33,6 +34,7 @@ import (
 	"github.com/polcortadellas/AREA/server/internal/mail"
 	"github.com/polcortadellas/AREA/server/internal/node"
 	"github.com/polcortadellas/AREA/server/internal/queue"
+	"github.com/polcortadellas/AREA/server/internal/scheduler"
 	"github.com/polcortadellas/AREA/server/internal/worker"
 )
 
@@ -58,9 +60,7 @@ func run() error {
 	case "worker":
 		return runWorker(ctx)
 	case "scheduler":
-		// Filled in by M-13; for now the process just stays up.
-		<-ctx.Done()
-		return nil
+		return runScheduler(ctx)
 	default:
 		return fmt.Errorf("unknown role %q (want api, scheduler or worker)", *role)
 	}
@@ -99,6 +99,39 @@ func runWorker(ctx context.Context) error {
 	return w.Run(ctx, concurrency)
 }
 
+func runScheduler(ctx context.Context) error {
+	dbURL := os.Getenv("DATABASE_URL")
+	if dbURL == "" {
+		return errors.New("DATABASE_URL is not set")
+	}
+	pool, err := pgxpool.New(ctx, dbURL)
+	if err != nil {
+		return fmt.Errorf("database: %w", err)
+	}
+	defer pool.Close()
+
+	redisOpt, err := redis.ParseURL(os.Getenv("REDIS_URL"))
+	if err != nil {
+		return fmt.Errorf("REDIS_URL: %w", err)
+	}
+	redisClient := redis.NewClient(redisOpt)
+	defer func() { _ = redisClient.Close() }()
+
+	registry := node.NewRegistry()
+	connectors.Register(registry)
+
+	s := scheduler.New(pool, registry, queue.NewStreams(redisClient))
+	if s.RetryEvery, err = time.ParseDuration(envOr("SCHEDULER_LOCK_RETRY", "500ms")); err != nil || s.RetryEvery <= 0 {
+		return fmt.Errorf("SCHEDULER_LOCK_RETRY must be a positive duration such as 500ms")
+	}
+	if s.PollEvery, err = time.ParseDuration(envOr("SCHEDULER_POLL_EVERY", "30s")); err != nil || s.PollEvery <= 0 {
+		return fmt.Errorf("SCHEDULER_POLL_EVERY must be a positive duration such as 30s")
+	}
+
+	slog.Info("scheduler starting", "lock_retry", s.RetryEvery, "poll_every", s.PollEvery)
+	return s.Run(ctx)
+}
+
 func runAPI(ctx context.Context, addr string) error {
 	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
@@ -126,7 +159,8 @@ func runAPI(ctx context.Context, addr string) error {
 		Addr: net.JoinHostPort(envOr("SMTP_HOST", "localhost"), envOr("SMTP_PORT", "1025")),
 		From: envOr("SMTP_FROM", "AREA <no-reply@area.local>"),
 	}
-	authSvc, err := auth.NewService(pool, tokens, sender, envOr("WEB_BASE_URL", "http://localhost:8081"))
+	webBaseURL := envOr("WEB_BASE_URL", "http://localhost:8081")
+	authSvc, err := auth.NewService(pool, tokens, sender, webBaseURL)
 	if err != nil {
 		return err
 	}
@@ -150,12 +184,13 @@ func runAPI(ctx context.Context, addr string) error {
 	})
 	mux.Handle("POST /workflows", tokens.RequireAuth(api.CreateWorkflow(registry)))
 	mux.Handle("POST /workflows/{workflowId}/trigger", tokens.RequireAuth(api.TriggerWorkflow(pool, runQueue)))
+	mux.Handle("GET /about.json", api.About(registry))
 	mux.Handle("GET /openapi.yaml", api.OpenAPISpec())
 	mux.Handle("GET /docs", api.Docs())
 
 	srv := &http.Server{
 		Addr:              addr,
-		Handler:           mux,
+		Handler:           api.CORS(strings.Split(envOr("CORS_ORIGINS", webBaseURL), ","), mux),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
