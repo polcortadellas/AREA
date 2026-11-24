@@ -81,7 +81,10 @@ func demoWorkflow(t *testing.T, pool *pgxpool.Pool) demo {
 	add := func(kind, typ string, config node.Values) string {
 		var id string
 		if err := pool.QueryRow(ctx,
-			`INSERT INTO nodes (workflow_id, kind, type, config) VALUES ($1, $2, $3, $4) RETURNING id::text`,
+			// key = id, so the test can use one string for edges, references and run_steps.
+			`WITH n AS (SELECT gen_random_uuid() AS id)
+			 INSERT INTO nodes (id, workflow_id, key, kind, type, config)
+			 SELECT id, $1, id::text, $2, $3, $4 FROM n RETURNING id::text`,
 			d.workflow, kind, typ, config,
 		).Scan(&id); err != nil {
 			t.Fatal(err)
