@@ -28,6 +28,11 @@ services:
       SMTP_FROM: ${SMTP_FROM:-AREA <no-reply@area.local>}
       WEB_BASE_URL: ${PUBLIC_WEB_URL:-http://localhost:8081}
       CORS_ORIGINS: ${CORS_ORIGINS:-http://localhost:8081}
+      API_BASE_URL: ${PUBLIC_API_URL:-http://localhost:8080}
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
     ports:
       - "${API_PORT:-8080}:8080"
 

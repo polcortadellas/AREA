@@ -23,6 +23,8 @@
 import type { AboutService } from './aboutService';
 
 export type AboutServer = {
+  /** Version of this document's format; it changes only when a change would break clients. */
+  schema_version: number;
   /** Unix time in seconds. */
   current_time: number;
   services: AboutService[];
