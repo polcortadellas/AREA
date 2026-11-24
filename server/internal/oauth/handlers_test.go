@@ -144,6 +144,22 @@ func TestCallbackKeepsTheBindingCookieWhenRejecting(t *testing.T) {
 	}
 }
 
+func TestAuthorizeKeepsOnePendingLinkPerService(t *testing.T) {
+	e := setup(t)
+	first, _ := e.authorize(t, "github")
+	google, _ := e.authorize(t, "google")
+
+	second, _ := e.authorize(t, "github")
+
+	alive := func(consent *url.URL) bool {
+		return e.rdb.Exists(context.Background(), stateKey(consent.Query().Get("state"))).Val() == 1
+	}
+	if alive(first) || !alive(second) || !alive(google) {
+		t.Errorf("states alive: first github %v, second github %v, google %v; want false, true, true",
+			alive(first), alive(second), alive(google))
+	}
+}
+
 func TestCallbackStateIsSingleUse(t *testing.T) {
 	e := setup(t)
 	consent, binding := e.authorize(t, "github")

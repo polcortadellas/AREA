@@ -52,12 +52,31 @@ func randomToken() string {
 	return base64.RawURLEncoding.EncodeToString(b)
 }
 
+// pendingKey points to the user's current attempt for a service.
+func pendingKey(userID uuid.UUID, service string) string {
+	return "oauth:pending:" + userID.String() + ":" + service
+}
+
+// savePending replaces the user's previous attempt for the same service, so
+// repeated authorize calls cannot fill Redis with states.
 func (s *Service) savePending(ctx context.Context, state string, p pendingLink) error {
 	b, err := json.Marshal(p)
 	if err != nil {
 		return fmt.Errorf("encode state: %w", err)
 	}
-	if err := s.states.Set(ctx, stateKey(state), b, stateTTL).Err(); err != nil {
+	key := stateKey(state)
+	previous, err := s.states.SetArgs(ctx, pendingKey(p.UserID, p.Service), key, redis.SetArgs{TTL: stateTTL, Get: true}).Result()
+	if err != nil && !errors.Is(err, redis.Nil) {
+		return fmt.Errorf("save state: %w", err)
+	}
+	_, err = s.states.TxPipelined(ctx, func(pipe redis.Pipeliner) error {
+		if previous != "" {
+			pipe.Del(ctx, previous)
+		}
+		pipe.Set(ctx, key, b, stateTTL)
+		return nil
+	})
+	if err != nil {
 		return fmt.Errorf("save state: %w", err)
 	}
 	return nil
