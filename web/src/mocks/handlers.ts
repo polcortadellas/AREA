@@ -5,6 +5,7 @@ import { getSystemMock } from '@/shared/api/generated/system/system.msw';
 import { getWorkflowsMock } from '@/shared/api/generated/workflows/workflows.msw';
 import { aboutHandlers } from './handlers/about';
 import { authHandlers } from './handlers/auth';
+import { servicesHandlers } from './handlers/services';
 import { workflowHandlers } from './handlers/workflows';
 
 /**
@@ -13,6 +14,7 @@ import { workflowHandlers } from './handlers/workflows';
  */
 export const handlers = [
   ...aboutHandlers,
+  ...servicesHandlers,
   ...authHandlers,
   ...workflowHandlers,
   ...getSystemMock(),

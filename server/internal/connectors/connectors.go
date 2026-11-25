@@ -3,6 +3,7 @@ package connectors
 import (
 	"github.com/polcortadellas/AREA/server/internal/connectors/discord"
 	"github.com/polcortadellas/AREA/server/internal/connectors/dummy"
+	"github.com/polcortadellas/AREA/server/internal/connectors/github"
 	"github.com/polcortadellas/AREA/server/internal/node"
 )
 
@@ -15,4 +16,6 @@ func Register(r *node.Registry) {
 	r.RegisterService(discord.Service)
 	r.RegisterReaction(discord.SendMessage{})
 	r.RegisterReaction(discord.CreateForumThread{})
+
+	r.RegisterService(github.Service)
 }

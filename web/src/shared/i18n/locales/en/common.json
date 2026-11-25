@@ -15,7 +15,8 @@
     "builder": "New workflow",
     "login": "Log in",
     "register": "Sign up",
-    "logout": "Log out"
+    "logout": "Log out",
+    "services": "Services"
   },
   "dashboard": {
     "title": "Your workflows",
@@ -141,6 +142,31 @@
       "invalidToken": "This link is invalid, already used or expired. Sign up again to get a new one.",
       "invalidEmail": "Enter a valid email address.",
       "weakPassword": "Use 8 to 128 characters.",
+      "network": "Cannot reach the server. Check your connection and try again.",
+      "unknown": "Something went wrong. Try again."
+    }
+  },
+  "services": {
+    "title": "Linked services",
+    "description": "Link the accounts your workflows act on. You can unlink them at any time.",
+    "empty": "No service on this server needs a linked account.",
+    "loadError": "Could not load the services. Reload the page to try again.",
+    "notLinked": "Not linked",
+    "linkedOn": "Linked on {{date}}",
+    "scopes": "Permissions: {{scopes}}",
+    "link": "Link {{service}}",
+    "linking": "Opening {{service}}…",
+    "unlink": "Unlink {{service}}",
+    "unlinking": "Unlinking…",
+    "callback": {
+      "linked": "{{service}} is now linked.",
+      "accessDenied": "Linking was cancelled on the provider's page.",
+      "invalidState": "The link expired or was started in another browser. Try again.",
+      "linkFailed": "The service could not be linked. Try again."
+    },
+    "errors": {
+      "notConfigured": "This service is not set up on this server yet.",
+      "notLinked": "This service was already unlinked.",
       "network": "Cannot reach the server. Check your connection and try again.",
       "unknown": "Something went wrong. Try again."
     }
