@@ -93,11 +93,19 @@ func runWorker(ctx context.Context) error {
 	registry := node.NewRegistry()
 	connectors.Register(registry)
 	exec := engine.New(pool, registry)
+	exec.Credentials = tokenSource(pool, redisClient)
 	hostname, _ := os.Hostname()
 	w := worker.New(pool, redisClient, exec, fmt.Sprintf("%s-%d", hostname, os.Getpid()))
 
 	slog.Info("worker starting", "concurrency", concurrency)
 	return w.Run(ctx, concurrency)
+}
+
+// tokenSource hands the nodes of OAuth2 services the token of the workflow's
+// owner, refreshing it first when it is about to expire.
+func tokenSource(pool *pgxpool.Pool, redisClient *redis.Client) *oauth.Service {
+	apiBaseURL := envOr("API_BASE_URL", "http://localhost:8080")
+	return oauth.New(pool, redisClient, oauth.ProvidersFromEnv(os.Getenv, apiBaseURL), envOr("WEB_BASE_URL", "http://localhost:8081"), apiBaseURL)
 }
 
 func runScheduler(ctx context.Context) error {
@@ -122,6 +130,7 @@ func runScheduler(ctx context.Context) error {
 	connectors.Register(registry)
 
 	s := scheduler.New(pool, registry, queue.NewStreams(redisClient))
+	s.Credentials = tokenSource(pool, redisClient)
 	if s.RetryEvery, err = time.ParseDuration(envOr("SCHEDULER_LOCK_RETRY", "500ms")); err != nil || s.RetryEvery <= 0 {
 		return fmt.Errorf("SCHEDULER_LOCK_RETRY must be a positive duration such as 500ms")
 	}
