@@ -18,4 +18,6 @@ func Register(r *node.Registry) {
 	r.RegisterReaction(discord.CreateForumThread{})
 
 	r.RegisterService(github.Service)
+	r.RegisterTrigger(github.NewIssue{})
+	r.RegisterReaction(github.CreateComment{})
 }

@@ -13,6 +13,10 @@ import (
 )
 
 type Engine struct {
+	// Credentials gives OAuth2 reactions the token of the workflow's owner.
+	// Nil runs every reaction with empty credentials.
+	Credentials node.CredentialSource
+
 	pool     *pgxpool.Pool
 	registry *node.Registry
 }
@@ -23,6 +27,7 @@ func New(pool *pgxpool.Pool, registry *node.Registry) *Engine {
 
 type run struct {
 	id       uuid.UUID
+	userID   uuid.UUID
 	nodes    map[string]node.WorkflowNode // by key, the ID clients and {{ }} references use
 	rowIDs   map[string]string            // key -> nodes.id, for run_steps
 	children map[string][]node.Edge
@@ -37,9 +42,11 @@ func (e *Engine) Execute(ctx context.Context, runID uuid.UUID) error {
 	r := &run{id: runID, done: map[string]step{}, recorded: map[string]bool{}}
 	var workflowID uuid.UUID
 	var payload node.Values
-	if err := e.pool.QueryRow(ctx,
-		`SELECT workflow_id, trigger_payload FROM runs WHERE id = $1`, runID,
-	).Scan(&workflowID, &payload); err != nil {
+	if err := e.pool.QueryRow(ctx, `
+		SELECT r.workflow_id, r.trigger_payload, w.user_id
+		FROM runs r JOIN workflows w ON w.id = r.workflow_id
+		WHERE r.id = $1`, runID,
+	).Scan(&workflowID, &payload, &r.userID); err != nil {
 		return fmt.Errorf("load run: %w", err)
 	}
 	trigger, err := e.load(ctx, workflowID, r)
@@ -100,8 +107,10 @@ func (e *Engine) visit(ctx context.Context, r *run, id string, triggerOut node.V
 			return err
 		}
 		if inputs, err = resolve(n.Config, r.done); err == nil {
-			// shortcut: no credentials yet, reactions that need OAuth get them with M-14.
-			out, err = reaction.Execute(ctx, inputs, node.Credentials{})
+			var creds node.Credentials
+			if creds, err = e.registry.CredentialsFor(ctx, e.Credentials, r.userID, reaction); err == nil {
+				out, err = reaction.Execute(ctx, inputs, creds)
+			}
 		}
 	default:
 		err = fmt.Errorf("unknown kind %q", n.Kind)

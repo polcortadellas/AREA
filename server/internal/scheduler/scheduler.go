@@ -32,6 +32,9 @@ type Scheduler struct {
 	RetryEvery time.Duration
 	PollEvery  time.Duration
 	LockKey    int64
+	// Credentials gives OAuth2 triggers the token of the workflow's owner.
+	// Nil polls every trigger with empty credentials.
+	Credentials node.CredentialSource
 
 	pool     *pgxpool.Pool
 	registry *node.Registry
@@ -40,6 +43,9 @@ type Scheduler struct {
 	// must not be shared with other queries.
 	conn   *pgx.Conn
 	leader bool
+	// Workflows already reported without credentials, so the log is not
+	// repeated on every poll. Only the polling loop touches it.
+	noCredentials map[uuid.UUID]bool
 }
 
 func New(pool *pgxpool.Pool, registry *node.Registry, queue RunQueue) *Scheduler {
@@ -50,6 +56,8 @@ func New(pool *pgxpool.Pool, registry *node.Registry, queue RunQueue) *Scheduler
 		pool:       pool,
 		registry:   registry,
 		queue:      queue,
+
+		noCredentials: map[uuid.UUID]bool{},
 	}
 }
 
@@ -116,6 +124,7 @@ func (s *Scheduler) resign() {
 
 type watched struct {
 	workflowID uuid.UUID
+	userID     uuid.UUID
 	trigger    string
 	config     node.Values
 	cursor     string
@@ -126,7 +135,7 @@ func (s *Scheduler) pollAll(ctx context.Context) {
 		return
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT w.id, n.type, n.config, COALESCE(w.poll_cursor #>> '{}', '')
+		SELECT w.id, w.user_id, n.type, n.config, COALESCE(w.poll_cursor #>> '{}', '')
 		FROM workflows w JOIN nodes n ON n.workflow_id = w.id AND n.kind = 'trigger'
 		WHERE w.enabled`)
 	if err != nil {
@@ -135,7 +144,7 @@ func (s *Scheduler) pollAll(ctx context.Context) {
 	}
 	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (watched, error) {
 		var w watched
-		err := row.Scan(&w.workflowID, &w.trigger, &w.config, &w.cursor)
+		err := row.Scan(&w.workflowID, &w.userID, &w.trigger, &w.config, &w.cursor)
 		return w, err
 	})
 	if err != nil {
@@ -163,10 +172,22 @@ func (s *Scheduler) pollOne(ctx context.Context, w watched) {
 		return
 	}
 
+	creds, err := s.registry.CredentialsFor(ctx, s.Credentials, w.userID, trigger)
+	if err != nil {
+		if !s.noCredentials[w.workflowID] {
+			slog.Warn("scheduler: workflow skipped until its credentials work", "workflow", w.workflowID, "type", w.trigger, "err", err)
+			s.noCredentials[w.workflowID] = true
+		}
+		return
+	}
+	if s.noCredentials[w.workflowID] {
+		slog.Info("scheduler: credentials work again", "workflow", w.workflowID)
+		delete(s.noCredentials, w.workflowID)
+	}
+
 	pollCtx, cancel := context.WithTimeout(ctx, pollTimeout)
 	defer cancel()
-	// shortcut: credentials stay empty until M-14 stores the users' tokens, then load them from user_services.
-	events, next, err := trigger.Poll(pollCtx, w.config, w.cursor, node.Credentials{})
+	events, next, err := trigger.Poll(pollCtx, w.config, w.cursor, creds)
 	if err != nil {
 		slog.Warn("scheduler: poll", "workflow", w.workflowID, "type", w.trigger, "err", err)
 		return

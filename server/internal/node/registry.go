@@ -2,9 +2,12 @@ package node
 
 import (
 	"cmp"
+	"context"
 	"fmt"
 	"maps"
 	"slices"
+
+	"github.com/google/uuid"
 )
 
 // Registry is filled once at start-up and only read afterwards, so it has no
@@ -74,6 +77,20 @@ func (r *Registry) Trigger(id string) (TriggerNode, bool) {
 func (r *Registry) Reaction(id string) (ReactionNode, bool) {
 	n, ok := r.reactions[id]
 	return n, ok
+}
+
+// CredentialsFor returns userID's token for the service of n. Nodes of a
+// service without OAuth2, or a nil src, get empty credentials.
+func (r *Registry) CredentialsFor(ctx context.Context, src CredentialSource, userID uuid.UUID, n Node) (Credentials, error) {
+	service := r.services[n.Metadata().Service]
+	if !service.OAuth2 || src == nil {
+		return Credentials{}, nil
+	}
+	creds, err := src.Credentials(ctx, userID, service.Name)
+	if err != nil {
+		return Credentials{}, fmt.Errorf("%s: %w", service.Name, err)
+	}
+	return creds, nil
 }
 
 func (r *Registry) Services() []Service {
