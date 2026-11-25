@@ -10,10 +10,12 @@ func TestRegisterBuildsTheCatalogue(t *testing.T) {
 	r := node.NewRegistry()
 	Register(r)
 
-	if _, ok := r.Trigger("dummy.counter"); !ok {
-		t.Error("dummy.counter is not registered")
+	for _, id := range []string{"dummy.counter", "github.new_issue"} {
+		if _, ok := r.Trigger(id); !ok {
+			t.Errorf("%s is not registered", id)
+		}
 	}
-	for _, id := range []string{"dummy.echo", "discord.send_message", "discord.create_forum_thread"} {
+	for _, id := range []string{"dummy.echo", "discord.send_message", "discord.create_forum_thread", "github.create_comment"} {
 		if _, ok := r.Reaction(id); !ok {
 			t.Errorf("%s is not registered", id)
 		}
