@@ -57,7 +57,7 @@ func TestTriggerPollsWithTheOwnersToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO nodes (workflow_id, kind, type) VALUES ($1, 'trigger', 'acme.inbox')`, workflow,
+		`INSERT INTO nodes (workflow_id, key, kind, type) VALUES ($1, 'start', 'trigger', 'acme.inbox')`, workflow,
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -69,8 +69,17 @@ func TestTriggerPollsWithTheOwnersToken(t *testing.T) {
 	s.pollAll(ctx)
 	s.Credentials = ownerTokens{} // unlinked: the trigger is skipped, not polled without a token
 	s.pollAll(ctx)
-
+	s.pollAll(ctx)
 	if len(got) != 1 || got[0] != "owner-token" {
 		t.Errorf("polled with %v, want once with the owner's token", got)
+	}
+	if !s.noCredentials[workflow] {
+		t.Error("the skipped workflow should be remembered so it is logged once")
+	}
+
+	s.Credentials = ownerTokens{owner: "new-token"} // linked again
+	s.pollAll(ctx)
+	if len(got) != 2 || got[1] != "new-token" || s.noCredentials[workflow] {
+		t.Errorf("after linking again: polled with %v, remembered %v", got, s.noCredentials[workflow])
 	}
 }

@@ -43,6 +43,9 @@ type Scheduler struct {
 	// must not be shared with other queries.
 	conn   *pgx.Conn
 	leader bool
+	// Workflows already reported without credentials, so the log is not
+	// repeated on every poll. Only the polling loop touches it.
+	noCredentials map[uuid.UUID]bool
 }
 
 func New(pool *pgxpool.Pool, registry *node.Registry, queue RunQueue) *Scheduler {
@@ -53,6 +56,8 @@ func New(pool *pgxpool.Pool, registry *node.Registry, queue RunQueue) *Scheduler
 		pool:       pool,
 		registry:   registry,
 		queue:      queue,
+
+		noCredentials: map[uuid.UUID]bool{},
 	}
 }
 
@@ -169,8 +174,15 @@ func (s *Scheduler) pollOne(ctx context.Context, w watched) {
 
 	creds, err := s.registry.CredentialsFor(ctx, s.Credentials, w.userID, trigger)
 	if err != nil {
-		slog.Warn("scheduler: credentials", "workflow", w.workflowID, "type", w.trigger, "err", err)
+		if !s.noCredentials[w.workflowID] {
+			slog.Warn("scheduler: workflow skipped until its credentials work", "workflow", w.workflowID, "type", w.trigger, "err", err)
+			s.noCredentials[w.workflowID] = true
+		}
 		return
+	}
+	if s.noCredentials[w.workflowID] {
+		slog.Info("scheduler: credentials work again", "workflow", w.workflowID)
+		delete(s.noCredentials, w.workflowID)
 	}
 
 	pollCtx, cancel := context.WithTimeout(ctx, pollTimeout)
