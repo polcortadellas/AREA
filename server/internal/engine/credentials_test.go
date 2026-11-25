@@ -59,7 +59,10 @@ func TestReactionGetsTheOwnersToken(t *testing.T) {
 	add := func(kind, typ string) string {
 		var id string
 		if err := pool.QueryRow(ctx,
-			`INSERT INTO nodes (workflow_id, kind, type) VALUES ($1, $2, $3) RETURNING id::text`, workflow, kind, typ,
+			// key = id, as in engine_test.go
+			`WITH n AS (SELECT gen_random_uuid() AS id)
+			 INSERT INTO nodes (id, workflow_id, key, kind, type) SELECT id, $1, id::text, $2, $3 FROM n RETURNING id::text`,
+			workflow, kind, typ,
 		).Scan(&id); err != nil {
 			t.Fatal(err)
 		}

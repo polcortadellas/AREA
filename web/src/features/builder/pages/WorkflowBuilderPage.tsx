@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router';
 
@@ -31,6 +32,8 @@ import {
 import type { About, Workflow } from '@/shared/api/generated/model';
 import { useGetAbout } from '@/shared/api/generated/system/system';
 import {
+  getGetWorkflowQueryKey,
+  getListWorkflowsQueryKey,
   useCreateWorkflow,
   useGetWorkflow,
   useReplaceWorkflow,
@@ -117,6 +120,7 @@ function WorkflowBuilderForm({
   existingWorkflow?: Workflow;
 }) {
   const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [draft, setDraft] = useState<WorkflowDraft>(() =>
     existingWorkflow
       ? fromWorkflow(existingWorkflow, about)
@@ -318,9 +322,15 @@ function WorkflowBuilderForm({
     try {
       if (workflowId) {
         await replaceMutation.mutateAsync({ workflowId, data: payload });
+        await queryClient.invalidateQueries({
+          queryKey: getGetWorkflowQueryKey(workflowId),
+        });
       } else {
         await createMutation.mutateAsync({ data: payload });
       }
+      await queryClient.invalidateQueries({
+        queryKey: getListWorkflowsQueryKey(),
+      });
       setSaved(true);
     } catch (error) {
       setServerErrors(extractWorkflowProblems(error, activeNodeIds(draft)));

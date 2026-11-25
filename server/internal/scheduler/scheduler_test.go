@@ -122,7 +122,7 @@ func TestSameEventTwiceMakesOneRun(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := pool.Exec(ctx,
-		`INSERT INTO nodes (workflow_id, kind, type) VALUES ($1, 'trigger', 'dummy.counter')`, workflowID,
+		`INSERT INTO nodes (workflow_id, key, kind, type) VALUES ($1, 'start', 'trigger', 'dummy.counter')`, workflowID,
 	); err != nil {
 		t.Fatal(err)
 	}

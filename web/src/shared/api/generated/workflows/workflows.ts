@@ -57,7 +57,7 @@ import type { ErrorType , BodyType } from '../../http';
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
-const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | undefined>)[]) => {
+const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string | number | boolean | bigint | readonly string[] | undefined>)[]) => {
   const seen = new Set<string>();
   const layers: [string, string | readonly string[]][][] = [];
   for (const source of sources.reverse()) {
@@ -66,10 +66,10 @@ const getHeaders = (...sources: (RequestInit['headers'] | Record<string, string 
       ? source.entries()
       : Symbol.iterator in source
         ? Array.from(source as Iterable<Iterable<string>>, (entry) => Array.from(entry) as [string, string])
-        : Object.entries<string | readonly string[] | undefined>(source);
+        : Object.entries<string | number | boolean | bigint | readonly string[] | undefined>(source);
     const layer: [string, string | readonly string[]][] = [];
     for (const [name, value] of entries) {
-      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, value]);
+      if (value !== undefined && !seen.has(name.toLowerCase())) layer.push([name, typeof value === 'object' ? value : String(value)]);
     }
     for (const [name] of layer) seen.add(name.toLowerCase());
     layers.push(layer);
@@ -102,7 +102,6 @@ export const getListWorkflowsUrl = () => {
 }
 
 /**
- * **Planned (M-21).**
  * @summary List the user's workflows
  */
 export const listWorkflows = async ( options?: Parameters<typeof apiFetch>[1]): Promise<WorkflowSummary[]> => {
@@ -149,10 +148,7 @@ export type ListWorkflowsQueryResult = NonNullable<Awaited<ReturnType<typeof lis
 export type ListWorkflowsQueryError = ErrorType<UnauthorizedResponse>
 
 
-/**
- * **Planned (M-21).**
- * @summary List the user's workflows
- */
+/** @summary List the user's workflows */
 export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<UnauthorizedResponse>>(
   options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -163,10 +159,7 @@ export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the user's workflows
- */
+/** @summary List the user's workflows */
 export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -177,18 +170,12 @@ export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the user's workflows
- */
+/** @summary List the user's workflows */
 export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the user's workflows
- */
+/** @summary List the user's workflows */
 export function useListWorkflows<TData = Awaited<ReturnType<typeof listWorkflows>>, TError = ErrorType<UnauthorizedResponse>>(
   options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listWorkflows>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -218,12 +205,12 @@ export const getCreateWorkflowUrl = () => {
  * The graph is validated before saving (M-10): one trigger, at most one
  * condition with two non-empty branches, no reconverging branches, and
  * every `{{ node.key }}` must point to an output declared by an earlier
- * node.
+ * node. The workflow, its nodes and edges are stored in one transaction.
  * @summary Create a workflow
  */
-export const createWorkflow = async (workflowInput: WorkflowInput, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
+export const createWorkflow = async (workflowInput: WorkflowInput, options?: Parameters<typeof apiFetch>[1]): Promise<Workflow> => {
 
-  return apiFetch<void>(getCreateWorkflowUrl(),
+  return apiFetch<Workflow>(getCreateWorkflowUrl(),
   {
     ...options,
     method: 'POST',
@@ -274,7 +261,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
  * The graph is validated before saving (M-10): one trigger, at most one
  * condition with two non-empty branches, no reconverging branches, and
  * every `{{ node.key }}` must point to an output declared by an earlier
- * node.
+ * node. The workflow, its nodes and edges are stored in one transaction.
  * @summary Create a workflow
  */
 export const useCreateWorkflow = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | InvalidWorkflowResponse>,
@@ -296,7 +283,6 @@ export const useCreateWorkflow = <TError = ErrorType<BadRequestResponse | Unauth
 }
 
 /**
- * **Planned (M-20).**
  * @summary Get a workflow
  */
 export const getWorkflow = async (workflowId: string, options?: Parameters<typeof apiFetch>[1]): Promise<Workflow> => {
@@ -343,10 +329,7 @@ export type GetWorkflowQueryResult = NonNullable<Awaited<ReturnType<typeof getWo
 export type GetWorkflowQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
 
 
-/**
- * **Planned (M-20).**
- * @summary Get a workflow
- */
+/** @summary Get a workflow */
 export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -357,10 +340,7 @@ export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-20).**
- * @summary Get a workflow
- */
+/** @summary Get a workflow */
 export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -371,18 +351,12 @@ export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, 
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-20).**
- * @summary Get a workflow
- */
+/** @summary Get a workflow */
 export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-20).**
- * @summary Get a workflow
- */
+/** @summary Get a workflow */
 export function useGetWorkflow<TData = Awaited<ReturnType<typeof getWorkflow>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getWorkflow>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -409,7 +383,9 @@ export const getReplaceWorkflowUrl = (workflowId: string,) => {
 }
 
 /**
- * Same validation as creation. **Planned (M-20).**
+ * Same validation as creation. Nodes are matched by `id`: a node kept
+ * under the same `id` keeps its run history, a removed one loses it.
+ * Changing the trigger restarts polling from scratch.
  * @summary Replace a workflow
  */
 export const replaceWorkflow = async (workflowId: string,
@@ -463,7 +439,9 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type ReplaceWorkflowMutationVariables = {workflowId: string;data: BodyType<WorkflowInput>}
 
     /**
- * Same validation as creation. **Planned (M-20).**
+ * Same validation as creation. Nodes are matched by `id`: a node kept
+ * under the same `id` keeps its run history, a removed one loses it.
+ * Changing the trigger restarts polling from scratch.
  * @summary Replace a workflow
  */
 export const useReplaceWorkflow = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse | InvalidWorkflowResponse>,
@@ -485,7 +463,7 @@ export const useReplaceWorkflow = <TError = ErrorType<BadRequestResponse | Unaut
 }
 
 /**
- * A paused workflow is not polled and starts no runs. **Planned (M-21).**
+ * A paused workflow is not polled, so its trigger starts no runs.
  * @summary Rename, pause or resume a workflow
  */
 export const updateWorkflow = async (workflowId: string,
@@ -539,7 +517,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateWorkflowMutationVariables = {workflowId: string;data: BodyType<WorkflowPatch>}
 
     /**
- * A paused workflow is not polled and starts no runs. **Planned (M-21).**
+ * A paused workflow is not polled, so its trigger starts no runs.
  * @summary Rename, pause or resume a workflow
  */
 export const useUpdateWorkflow = <TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>,
@@ -561,7 +539,6 @@ export const useUpdateWorkflow = <TError = ErrorType<BadRequestResponse | Unauth
 }
 
 /**
- * **Planned (M-21).**
  * @summary Delete a workflow and its runs
  */
 export const deleteWorkflow = async (workflowId: string, options?: Parameters<typeof apiFetch>[1]): Promise<void> => {
@@ -613,10 +590,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeleteWorkflowMutationError = ErrorType<UnauthorizedResponse | NotFoundResponse>
     export type DeleteWorkflowMutationVariables = {workflowId: string}
 
-    /**
- * **Planned (M-21).**
- * @summary Delete a workflow and its runs
- */
+    /** @summary Delete a workflow and its runs */
 export const useDeleteWorkflow = <TError = ErrorType<UnauthorizedResponse | NotFoundResponse>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteWorkflow>>, TError,DeleteWorkflowMutationVariables, TContext>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient): UseMutationResult<

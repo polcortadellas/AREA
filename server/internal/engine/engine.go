@@ -28,7 +28,8 @@ func New(pool *pgxpool.Pool, registry *node.Registry) *Engine {
 type run struct {
 	id       uuid.UUID
 	userID   uuid.UUID
-	nodes    map[string]node.WorkflowNode
+	nodes    map[string]node.WorkflowNode // by key, the ID clients and {{ }} references use
+	rowIDs   map[string]string            // key -> nodes.id, for run_steps
 	children map[string][]node.Edge
 	done     map[string]step // also holds the trigger under "trigger"
 	recorded map[string]bool
@@ -136,18 +137,21 @@ func (e *Engine) visit(ctx context.Context, r *run, id string, triggerOut node.V
 
 func (e *Engine) load(ctx context.Context, workflowID uuid.UUID, r *run) (string, error) {
 	rows, err := e.pool.Query(ctx,
-		`SELECT id::text, kind, type, config FROM nodes WHERE workflow_id = $1`, workflowID)
+		`SELECT id::text, key, kind, type, config FROM nodes WHERE workflow_id = $1`, workflowID)
 	if err != nil {
 		return "", fmt.Errorf("load nodes: %w", err)
 	}
 	r.nodes = map[string]node.WorkflowNode{}
+	r.rowIDs = map[string]string{}
 	var trigger string
 	for rows.Next() {
 		var n node.WorkflowNode
-		if err := rows.Scan(&n.ID, &n.Kind, &n.Type, &n.Config); err != nil {
+		var rowID string
+		if err := rows.Scan(&rowID, &n.ID, &n.Kind, &n.Type, &n.Config); err != nil {
 			return "", fmt.Errorf("load nodes: %w", err)
 		}
 		r.nodes[n.ID] = n
+		r.rowIDs[n.ID] = rowID
 		if n.Kind == node.KindTrigger {
 			trigger = n.ID
 		}
@@ -160,7 +164,9 @@ func (e *Engine) load(ctx context.Context, workflowID uuid.UUID, r *run) (string
 	}
 
 	rows, err = e.pool.Query(ctx,
-		`SELECT from_node_id::text, to_node_id::text, coalesce(branch, '') FROM edges WHERE workflow_id = $1`, workflowID)
+		`SELECT f.key, t.key, coalesce(e.branch, '')
+		 FROM edges e JOIN nodes f ON f.id = e.from_node_id JOIN nodes t ON t.id = e.to_node_id
+		 WHERE e.workflow_id = $1`, workflowID)
 	if err != nil {
 		return "", fmt.Errorf("load edges: %w", err)
 	}
@@ -202,7 +208,7 @@ func (e *Engine) record(ctx context.Context, r *run, nodeID, status string, out 
 		        CASE WHEN $3::text IN ('RUNNING', 'SKIPPED') THEN NULL ELSE now() END)
 		ON CONFLICT (run_id, node_id) DO UPDATE
 		SET status = EXCLUDED.status, output = EXCLUDED.output, error = EXCLUDED.error, finished_at = EXCLUDED.finished_at`,
-		r.id, nodeID, status, output, errText, r.id.String()+":"+nodeID); err != nil {
+		r.id, r.rowIDs[nodeID], status, output, errText, r.id.String()+":"+r.rowIDs[nodeID]); err != nil {
 		return fmt.Errorf("record step %s: %w", nodeID, err)
 	}
 	r.recorded[nodeID] = true
