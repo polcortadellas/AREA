@@ -38,13 +38,14 @@ import type {
 } from '../model';
 
 import {
+  getCreateWorkflowResponseMock,
   getGetWorkflowResponseMock,
   getListWorkflowsResponseMock,
   getReplaceWorkflowResponseMock,
   getUpdateWorkflowResponseMock
 } from './workflows.faker';
 
-export { getListWorkflowsResponseMock, getGetWorkflowResponseMock, getReplaceWorkflowResponseMock, getUpdateWorkflowResponseMock } from './workflows.faker';
+export { getListWorkflowsResponseMock, getCreateWorkflowResponseMock, getGetWorkflowResponseMock, getReplaceWorkflowResponseMock, getUpdateWorkflowResponseMock } from './workflows.faker';
 
 
 export const getListWorkflowsMockHandler = (overrideResponse?: WorkflowSummary[] | ((info: Parameters<HttpResponseResolver>[0]) => Promise<WorkflowSummary[]> | WorkflowSummary[]), options?: RequestHandlerOptions) => {
@@ -59,12 +60,14 @@ export const getListWorkflowsMockHandler = (overrideResponse?: WorkflowSummary[]
   }, options)
 }
 
-export const getCreateWorkflowMockHandler = (overrideResponse?: void | ((info: Parameters<HttpResponseResolver<PathParams, WorkflowInput>>[0]) => Promise<void> | void), options?: RequestHandlerOptions) => {
+export const getCreateWorkflowMockHandler = (overrideResponse?: Workflow | ((info: Parameters<HttpResponseResolver<PathParams, WorkflowInput>>[0]) => Promise<Workflow> | Workflow), options?: RequestHandlerOptions) => {
   return http.post<PathParams, WorkflowInput>('*/workflows', async (info: Parameters<HttpResponseResolver<PathParams, WorkflowInput>>[0]) => {
-  if (typeof overrideResponse === 'function') {await overrideResponse(info); }
 
-    return new HttpResponse(null,
-      { status: 200
+
+    return HttpResponse.json(overrideResponse !== undefined
+    ? (typeof overrideResponse === "function" ? await overrideResponse(info) : overrideResponse)
+    : getCreateWorkflowResponseMock(),
+      { status: 201
       })
   }, options)
 }

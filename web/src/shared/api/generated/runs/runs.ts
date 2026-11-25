@@ -40,6 +40,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  BadRequestResponse,
   ListRunsParams,
   NotFoundResponse,
   Run,
@@ -167,7 +168,6 @@ export const useTriggerWorkflow = <TError = ErrorType<UnauthorizedResponse | Not
 }
 
 /**
- * **Planned (M-21).**
  * @summary List the runs of a workflow
  */
 export const listRuns = async (workflowId: string,
@@ -194,7 +194,7 @@ export const getListRunsQueryKey = (workflowId: string,
     }
 
 
-export const getListRunsQueryOptions = <TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(workflowId: string,
+export const getListRunsQueryOptions = <TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>>(workflowId: string,
     params?: ListRunsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
 ) => {
 
@@ -214,14 +214,11 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type ListRunsQueryResult = NonNullable<Awaited<ReturnType<typeof listRuns>>>
-export type ListRunsQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
+export type ListRunsQueryError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>
 
 
-/**
- * **Planned (M-21).**
- * @summary List the runs of a workflow
- */
-export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+/** @summary List the runs of a workflow */
+export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string,
     params: undefined |  ListRunsParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -232,11 +229,8 @@ export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the runs of a workflow
- */
-export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+/** @summary List the runs of a workflow */
+export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string,
     params?: ListRunsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -247,20 +241,14 @@ export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the runs of a workflow
- */
-export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+/** @summary List the runs of a workflow */
+export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string,
     params?: ListRunsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary List the runs of a workflow
- */
-export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
+/** @summary List the runs of a workflow */
+export function useListRuns<TData = Awaited<ReturnType<typeof listRuns>>, TError = ErrorType<BadRequestResponse | UnauthorizedResponse | NotFoundResponse>>(
  workflowId: string,
     params?: ListRunsParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof listRuns>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
@@ -287,7 +275,6 @@ export const getGetRunUrl = (runId: string,) => {
 }
 
 /**
- * **Planned (M-21).**
  * @summary Get a run and its steps
  */
 export const getRun = async (runId: string, options?: Parameters<typeof apiFetch>[1]): Promise<RunDetail> => {
@@ -334,10 +321,7 @@ export type GetRunQueryResult = NonNullable<Awaited<ReturnType<typeof getRun>>>
 export type GetRunQueryError = ErrorType<UnauthorizedResponse | NotFoundResponse>
 
 
-/**
- * **Planned (M-21).**
- * @summary Get a run and its steps
- */
+/** @summary Get a run and its steps */
 export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  runId: string, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
@@ -348,10 +332,7 @@ export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = E
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary Get a run and its steps
- */
+/** @summary Get a run and its steps */
 export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  runId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
@@ -362,18 +343,12 @@ export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = E
       >, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary Get a run and its steps
- */
+/** @summary Get a run and its steps */
 export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  runId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
-/**
- * **Planned (M-21).**
- * @summary Get a run and its steps
- */
+/** @summary Get a run and its steps */
 export function useGetRun<TData = Awaited<ReturnType<typeof getRun>>, TError = ErrorType<UnauthorizedResponse | NotFoundResponse>>(
  runId: string, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getRun>>, TError, TData>>, request?: SecondParameter<typeof apiFetch>}
  , queryClient?: QueryClient
