@@ -6,6 +6,8 @@ import (
 	"context"
 	"errors"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 // Values decoded from JSON hold string, float64 or bool.
@@ -30,6 +32,11 @@ func (m Metadata) ID() string {
 
 type Credentials struct {
 	AccessToken string
+}
+
+// CredentialSource gives out a user's token for a linked service (internal/oauth).
+type CredentialSource interface {
+	Credentials(ctx context.Context, userID uuid.UUID, service string) (Credentials, error)
 }
 
 type Event struct {

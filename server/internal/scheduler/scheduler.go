@@ -32,6 +32,9 @@ type Scheduler struct {
 	RetryEvery time.Duration
 	PollEvery  time.Duration
 	LockKey    int64
+	// Credentials gives OAuth2 triggers the token of the workflow's owner.
+	// Nil polls every trigger with empty credentials.
+	Credentials node.CredentialSource
 
 	pool     *pgxpool.Pool
 	registry *node.Registry
@@ -116,6 +119,7 @@ func (s *Scheduler) resign() {
 
 type watched struct {
 	workflowID uuid.UUID
+	userID     uuid.UUID
 	trigger    string
 	config     node.Values
 	cursor     string
@@ -126,7 +130,7 @@ func (s *Scheduler) pollAll(ctx context.Context) {
 		return
 	}
 	rows, err := s.pool.Query(ctx, `
-		SELECT w.id, n.type, n.config, COALESCE(w.poll_cursor #>> '{}', '')
+		SELECT w.id, w.user_id, n.type, n.config, COALESCE(w.poll_cursor #>> '{}', '')
 		FROM workflows w JOIN nodes n ON n.workflow_id = w.id AND n.kind = 'trigger'
 		WHERE w.enabled`)
 	if err != nil {
@@ -135,7 +139,7 @@ func (s *Scheduler) pollAll(ctx context.Context) {
 	}
 	list, err := pgx.CollectRows(rows, func(row pgx.CollectableRow) (watched, error) {
 		var w watched
-		err := row.Scan(&w.workflowID, &w.trigger, &w.config, &w.cursor)
+		err := row.Scan(&w.workflowID, &w.userID, &w.trigger, &w.config, &w.cursor)
 		return w, err
 	})
 	if err != nil {
@@ -163,10 +167,15 @@ func (s *Scheduler) pollOne(ctx context.Context, w watched) {
 		return
 	}
 
+	creds, err := s.registry.CredentialsFor(ctx, s.Credentials, w.userID, trigger)
+	if err != nil {
+		slog.Warn("scheduler: credentials", "workflow", w.workflowID, "type", w.trigger, "err", err)
+		return
+	}
+
 	pollCtx, cancel := context.WithTimeout(ctx, pollTimeout)
 	defer cancel()
-	// shortcut: credentials stay empty until M-14 stores the users' tokens, then load them from user_services.
-	events, next, err := trigger.Poll(pollCtx, w.config, w.cursor, node.Credentials{})
+	events, next, err := trigger.Poll(pollCtx, w.config, w.cursor, creds)
 	if err != nil {
 		slog.Warn("scheduler: poll", "workflow", w.workflowID, "type", w.trigger, "err", err)
 		return
