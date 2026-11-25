@@ -20,7 +20,126 @@
   },
   "dashboard": {
     "title": "Your workflows",
-    "newWorkflow": "Create workflow"
+    "subtitle": "Monitor, pause, delete, and inspect step-by-step execution history for your automations.",
+    "newWorkflow": "Create workflow",
+    "refresh": "Refresh",
+    "loading": "Loading workflows…",
+    "stats": {
+      "summary": "Workflow summary",
+      "total": "Total",
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "filters": {
+      "label": "Filter workflows",
+      "searchLabel": "Search workflows",
+      "searchPlaceholder": "Search by workflow name…",
+      "all": "All",
+      "active": "Active",
+      "paused": "Paused",
+      "clear": "Clear filters"
+    },
+    "status": {
+      "active": "Active",
+      "paused": "Paused"
+    },
+    "card": {
+      "pausedNotice": "Paused — polling is stopped and no future runs will start.",
+      "updatedAt": "Updated {{date}}",
+      "createdAt": "Created {{date}}",
+      "toggleLabel": "Active state for {{name}}",
+      "pause": "Pause",
+      "resume": "Resume",
+      "pausing": "Pausing…",
+      "resuming": "Resuming…",
+      "runNow": "Run now",
+      "running": "Queueing…",
+      "runNowDisabledPaused": "Resume this workflow before running it.",
+      "history": "Execution history",
+      "edit": "Edit",
+      "delete": "Delete",
+      "deleting": "Deleting…",
+      "deleteConfirmTitle": "Delete “{{name}}”?",
+      "deleteConfirmDescription": "This permanently deletes the workflow and all of its execution history.",
+      "deleteConfirm": "Delete workflow",
+      "deleteCancel": "Cancel"
+    },
+    "empty": {
+      "title": "No workflows yet",
+      "description": "Create your first workflow to start automating triggers and reactions.",
+      "filteredTitle": "No matching workflows",
+      "filteredDescription": "Try a different search term or status filter."
+    },
+    "feedback": {
+      "paused": "“{{name}}” paused. Future runs are stopped.",
+      "resumed": "“{{name}}” resumed. Future runs are enabled.",
+      "deleted": "“{{name}}” deleted.",
+      "triggered": "Run queued for “{{name}}”."
+    },
+    "errors": {
+      "loadFailed": "Could not load your workflows.",
+      "retry": "Try again",
+      "notFound": "This workflow or run could not be found.",
+      "unauthorized": "Your session expired. Log in again.",
+      "network": "Cannot reach the server. Check your connection and try again.",
+      "unknown": "Something went wrong. Try again."
+    },
+    "history": {
+      "backToDashboard": "Back to dashboard",
+      "title": "Execution history",
+      "fallbackName": "Workflow",
+      "subtitle": "Inspect every run, trigger payload, step status, and output.",
+      "runsHeading": "Runs",
+      "runsCount": "{{count}} shown",
+      "limitLabel": "Runs to show",
+      "loadingRuns": "Loading execution history…",
+      "loadRunsError": "Could not load execution history.",
+      "emptyRunsTitle": "No runs yet",
+      "emptyRunsDescription": "Runs will appear here once this workflow is triggered.",
+      "selectRunPrompt": "Select a run to inspect its step-by-step execution.",
+      "loadingRunDetail": "Loading step details…",
+      "loadRunDetailError": "Could not load details for this run.",
+      "runHeading": "Run details",
+      "runId": "Run ID",
+      "createdAt": "Queued",
+      "startedAt": "Started",
+      "finishedAt": "Finished",
+      "duration": "Duration",
+      "notAvailable": "—",
+      "runError": "Run error",
+      "triggerPayload": "Trigger payload",
+      "emptyPayload": "No trigger payload recorded.",
+      "stepsHeading": "Steps",
+      "stepsCount": "{{count}} steps",
+      "emptySteps": "No steps recorded for this run yet.",
+      "stepNumber": "Step {{index}}",
+      "nodeId": "Node",
+      "attempt": "Attempt {{count}}",
+      "notExecuted": "Not executed",
+      "output": "Output",
+      "noOutput": "No output recorded.",
+      "stepError": "Step error",
+      "skippedNotice": "Skipped because this branch was not taken or an earlier step failed.",
+      "runStatus": {
+        "PENDING": "Pending",
+        "RUNNING": "Running",
+        "SUCCEEDED": "Succeeded",
+        "FAILED": "Failed",
+        "DEAD": "Dead"
+      },
+      "stepStatus": {
+        "PENDING": "Pending",
+        "RUNNING": "Running",
+        "SUCCEEDED": "Succeeded",
+        "FAILED": "Failed",
+        "SKIPPED": "Skipped"
+      },
+      "nodeKind": {
+        "trigger": "Trigger",
+        "condition": "Condition",
+        "reaction": "Reaction"
+      }
+    }
   },
   "builder": {
     "title": "Create workflow",
