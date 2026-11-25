@@ -42,6 +42,19 @@ export function RootLayout() {
                 </li>
                 <li>
                   <NavLink
+                    to="/workflows/new"
+                    className={({ isActive }) =>
+                      cn(
+                        'hover:underline',
+                        isActive && 'font-semibold underline',
+                      )
+                    }
+                  >
+                    {t('nav.builder')}
+                  </NavLink>
+                </li>
+                <li>
+                  <NavLink
                     to="/services"
                     className={({ isActive }) =>
                       cn(

@@ -12,13 +12,95 @@
   },
   "nav": {
     "dashboard": "Panel",
+    "builder": "Nuevo flujo",
     "login": "Iniciar sesión",
     "register": "Registrarse",
     "logout": "Cerrar sesión",
     "services": "Servicios"
   },
   "dashboard": {
-    "title": "Tus flujos de trabajo"
+    "title": "Tus flujos de trabajo",
+    "newWorkflow": "Crear flujo de trabajo"
+  },
+  "builder": {
+    "title": "Crear flujo de trabajo",
+    "editTitle": "Editar flujo de trabajo",
+    "subtitle": "Construye una automatización a partir del catálogo de servicios del servidor.",
+    "loading": "Cargando servicios desde /about.json…",
+    "loadError": "No se pudo cargar el catálogo de servicios desde /about.json.",
+    "emptyCatalogue": "No hay acciones disparadoras ni reacciones disponibles en /about.json.",
+    "nameLabel": "Nombre del flujo de trabajo",
+    "namePlaceholder": "p. ej. Notificar en Discord al abrir un issue en GitHub",
+    "enabledLabel": "Activar el flujo de trabajo inmediatamente",
+    "oauth2Badge": "Requiere OAuth2",
+    "requiredField": "Obligatorio",
+    "optionalField": "Opcional",
+    "nodeIdLabel": "ID de nodo: {{id}}",
+    "serviceLabel": "Servicio",
+    "trigger": {
+      "heading": "1. Disparador (Acción)",
+      "description": "Selecciona el evento externo que inicia este flujo de trabajo.",
+      "actionLabel": "Acción"
+    },
+    "condition": {
+      "heading": "2. Condición (Si / Si no)",
+      "description": "Dirige la ejecución hacia una de dos ramas sin reconvergencia según una salida anterior.",
+      "add": "Añadir condición (Si / Si no)",
+      "remove": "Eliminar condición",
+      "leftLabel": "Operando izquierdo",
+      "leftDescription": "Valor a comparar, normalmente una referencia {{ trigger.key }} o {{ node.key }}.",
+      "opLabel": "Operador",
+      "rightLabel": "Operando derecho",
+      "rightDescription": "Valor con el que comparar.",
+      "operators": {
+        "equal": "Igual a (equal)",
+        "not_equal": "Distinto de (not_equal)",
+        "greater_than": "Mayor que (greater_than)",
+        "less_than": "Menor que (less_than)"
+      },
+      "trueBranch": "Rama verdadera",
+      "trueBranchDescription": "Se ejecuta cuando la condición se evalúa como verdadera.",
+      "falseBranch": "Rama falsa",
+      "falseBranchDescription": "Se ejecuta cuando la condición se evalúa como falsa.",
+      "addTrueReaction": "Añadir reacción a la rama verdadera",
+      "addFalseReaction": "Añadir reacción a la rama falsa",
+      "emptyBranch": "Aún no hay reacciones en esta rama."
+    },
+    "reactions": {
+      "heading": "Reacciones",
+      "description": "Encadena una o más reacciones ejecutadas secuencialmente.",
+      "stepHeading": "Reacción {{index}}",
+      "branchStepHeading": "{{branch}} · Reacción {{index}}",
+      "reactionLabel": "Reacción",
+      "add": "Añadir reacción",
+      "remove": "Eliminar reacción",
+      "moveUp": "Subir",
+      "moveDown": "Bajar",
+      "noInputs": "Este nodo no tiene parámetros configurables."
+    },
+    "outputs": {
+      "declaredHeading": "Salidas declaradas",
+      "none": "Sin salidas declaradas",
+      "availableHeading": "Salidas disponibles de pasos anteriores"
+    },
+    "keyMap": {
+      "insertLabel": "Insertar clave de salida en {{field}}",
+      "placeholder": "Insertar {{ node.key }}…"
+    },
+    "actions": {
+      "save": "Guardar flujo de trabajo",
+      "saving": "Guardando…",
+      "saved": "Flujo de trabajo validado y guardado."
+    },
+    "errors": {
+      "nameRequired": "Introduce un nombre para el flujo de trabajo.",
+      "stepProblems": "Errores de validación en {{step}}",
+      "workflowProblems": "La validación del flujo de trabajo falló",
+      "badRequest": "El servidor rechazó los datos del flujo de trabajo.",
+      "unauthorized": "Debes iniciar sesión para guardar un flujo de trabajo.",
+      "network": "No se puede conectar con el servidor.",
+      "unknown": "No se pudo guardar el flujo de trabajo. Inténtalo de nuevo."
+    }
   },
   "auth": {
     "email": "Correo electrónico",

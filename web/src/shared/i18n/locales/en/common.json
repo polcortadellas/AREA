@@ -12,13 +12,95 @@
   },
   "nav": {
     "dashboard": "Dashboard",
+    "builder": "New workflow",
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
     "services": "Services"
   },
   "dashboard": {
-    "title": "Your workflows"
+    "title": "Your workflows",
+    "newWorkflow": "Create workflow"
+  },
+  "builder": {
+    "title": "Create workflow",
+    "editTitle": "Edit workflow",
+    "subtitle": "Build an automation from the server's live service catalogue.",
+    "loading": "Loading services from /about.json…",
+    "loadError": "Could not load the service catalogue from /about.json.",
+    "emptyCatalogue": "No trigger actions or reactions are available in /about.json.",
+    "nameLabel": "Workflow name",
+    "namePlaceholder": "e.g. Notify Discord on new GitHub issue",
+    "enabledLabel": "Enable workflow immediately",
+    "oauth2Badge": "OAuth2 required",
+    "requiredField": "Required",
+    "optionalField": "Optional",
+    "nodeIdLabel": "Node ID: {{id}}",
+    "serviceLabel": "Service",
+    "trigger": {
+      "heading": "1. Trigger (Action)",
+      "description": "Select the external event that starts this workflow.",
+      "actionLabel": "Action"
+    },
+    "condition": {
+      "heading": "2. Condition (If / Else)",
+      "description": "Route execution into one of two non-merging branches based on an upstream output.",
+      "add": "Add condition (If / Else)",
+      "remove": "Remove condition",
+      "leftLabel": "Left operand",
+      "leftDescription": "Value to compare, usually a {{ trigger.key }} or {{ node.key }} reference.",
+      "opLabel": "Operator",
+      "rightLabel": "Right operand",
+      "rightDescription": "Value to compare against.",
+      "operators": {
+        "equal": "Equals (equal)",
+        "not_equal": "Does not equal (not_equal)",
+        "greater_than": "Greater than (greater_than)",
+        "less_than": "Less than (less_than)"
+      },
+      "trueBranch": "True branch",
+      "trueBranchDescription": "Runs when the condition evaluates to true.",
+      "falseBranch": "False branch",
+      "falseBranchDescription": "Runs when the condition evaluates to false.",
+      "addTrueReaction": "Add reaction to True branch",
+      "addFalseReaction": "Add reaction to False branch",
+      "emptyBranch": "No reactions in this branch yet."
+    },
+    "reactions": {
+      "heading": "Reactions",
+      "description": "Chain one or more reactions executed sequentially.",
+      "stepHeading": "Reaction {{index}}",
+      "branchStepHeading": "{{branch}} · Reaction {{index}}",
+      "reactionLabel": "Reaction",
+      "add": "Add reaction",
+      "remove": "Remove reaction",
+      "moveUp": "Move up",
+      "moveDown": "Move down",
+      "noInputs": "This node has no configurable parameters."
+    },
+    "outputs": {
+      "declaredHeading": "Declared outputs",
+      "none": "No declared outputs",
+      "availableHeading": "Available upstream outputs"
+    },
+    "keyMap": {
+      "insertLabel": "Insert output key into {{field}}",
+      "placeholder": "Insert {{ node.key }}…"
+    },
+    "actions": {
+      "save": "Save workflow",
+      "saving": "Saving…",
+      "saved": "Workflow validated and saved."
+    },
+    "errors": {
+      "nameRequired": "Enter a workflow name.",
+      "stepProblems": "Validation errors for {{step}}",
+      "workflowProblems": "Workflow validation failed",
+      "badRequest": "The workflow payload was rejected by the server.",
+      "unauthorized": "You must be signed in to save a workflow.",
+      "network": "Cannot reach the server.",
+      "unknown": "Could not save the workflow. Please try again."
+    }
   },
   "auth": {
     "email": "Email",

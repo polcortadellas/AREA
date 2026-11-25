@@ -91,9 +91,18 @@ OPENAPI_SPEC=path/to/openapi.yaml npm run api:gen # another location
 
 After regenerating, register the new mock handlers in `src/mocks/handlers.ts` (e.g. `...getWorkflowsMock()`) and commit the generated folder: the web Docker build only sees `web/`, so it cannot read the spec from `server/`. The generated code is excluded from ESLint and Prettier; never edit it by hand.
 
-Hand-written handlers in `src/mocks/handlers/` are listed before the generated ones and take priority, which is also how a test or a dev session overrides a single endpoint. `about.ts` returns a realistic `/about.json`, and `auth.ts` behaves like the real auth endpoints: log in with any e-mail and the password `correct-horse`, `unverified@example.com` is not confirmed yet, and `/verify-email?token=valid-token` confirms an e-mail. The session cookie is simulated per browser tab.
+Hand-written handlers in `src/mocks/handlers/` are listed before the generated ones and take priority, which is also how a test or a dev session overrides a single endpoint. `about.ts` returns a realistic `/about.json`, `auth.ts` behaves like the real auth endpoints (log in with any e-mail and the password `correct-horse`, `unverified@example.com` is not confirmed yet, `/verify-email?token=valid-token` confirms an e-mail, and the session cookie is simulated per browser tab), and `workflows.ts` provides save-time workflow DAG + `{{ node.key }}` HTTP 422 validation mirroring `server/internal/node/validate.go`.
 
 Errors: `apiFetch` throws `ApiError` with `status` and the parsed `body` (e.g. the HTTP 422 validation details), and generated hooks type their `error` as `ApiError`.
+
+## Workflow builder (`src/features/builder/`)
+
+Routes: `/workflows/new` (`POST /workflows`) and `/workflows/:workflowId/edit` (`GET` + `PUT /workflows/:workflowId`).
+
+- **Zero hardcoded services:** `lib/catalogue.ts` derives trigger-capable services (`actions.length > 0`), reaction-capable services (`reactions.length > 0`), `oauth2` badges, parameter inputs (`string`, `number`, `boolean`) and declared outputs directly from `GET /about.json`.
+- **DAG structure (`lib/workflowGraph.ts`):** serializes 1 trigger (`id: "start"`), an optional condition (`id: "condition"`, `type: "compare"` with `equal`, `not_equal`, `greater_than`, `less_than`) splitting into two non-merging branches (`branch: "true"` and `branch: "false"`), and 1 or more chained reactions per path.
+- **Key mapping (`{{ trigger.key }}`, `{{ node.key }}`):** each condition and reaction step computes the declared outputs of all ancestor nodes on its execution path and exposes an accessible `Insert {{ node.key }}…` picker alongside direct template input.
+- **Inline HTTP 422 validation (`lib/errors.ts`, `components/StepErrorAlert.tsx`):** `WorkflowValidationError.problems` returned by the server are matched by `problem.node` to the offending step card (`role="alert"`) and mark referenced input fields with `aria-invalid="true"`.
 
 ## Translations
 
