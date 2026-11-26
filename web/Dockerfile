@@ -1,4 +1,5 @@
-FROM node:22-alpine AS build
+# glibc, not alpine: rollup's native musl parser fails on react-dom ("Code is nested too deeply").
+FROM node:22-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm install --no-audit --no-fund
