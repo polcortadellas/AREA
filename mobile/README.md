@@ -28,10 +28,10 @@ npm run android    # build a debug APK and install it on the running emulator/de
 
 ## Installing the APK from Docker Compose
 
-`docker compose up --build` writes a release APK (arm64 for phones, x86_64 for emulators) to `./dist/client.apk`.
+`docker compose up --build` writes a release APK (arm64 for phones, x86_64 for emulators) to `./dist/AREA.apk`.
 
 ```bash
-adb install -r dist/client.apk   # emulator or USB device
+adb install -r dist/AREA.apk   # emulator or USB device
 ```
 
 Or copy the file to the phone and open it (allow "Install unknown apps" for your file manager).
