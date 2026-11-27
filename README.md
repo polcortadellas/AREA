@@ -58,7 +58,7 @@ The first build takes a while: the Android APK is compiled inside Docker (on App
 | API documentation (Swagger UI) | http://localhost:8080/docs (raw contract: `/openapi.yaml`) |
 | Web client | http://localhost:8081 |
 | Mailpit (inbox for confirmation e-mails) | http://localhost:8025 |
-| Android APK | `./dist/client.apk` (written by the `android-builder` container, which then exits) |
+| Android APK | `./dist/AREA.apk` (written by the `android-builder` container, which then exits) |
 
 PostgreSQL and Redis are only reachable from inside the Compose network. Host ports can be changed in `.env`.
 

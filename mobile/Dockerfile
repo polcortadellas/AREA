@@ -29,6 +29,6 @@ RUN cd android && ./gradlew help --no-daemon -q
 COPY . .
 RUN cd android \
     && ./gradlew assembleRelease --no-daemon -PreactNativeArchitectures=arm64-v8a,x86_64 \
-    && cp app/build/outputs/apk/release/app-release.apk /opt/client.apk
+    && cp app/build/outputs/apk/release/app-release.apk /opt/AREA.apk
 
-CMD ["sh", "-c", "mkdir -p /out && cp /opt/client.apk /out/client.apk && echo 'APK written to ./dist/client.apk'"]
+CMD ["sh", "-c", "mkdir -p /out && cp /opt/AREA.apk /out/AREA.apk && echo 'APK written to ./dist/AREA.apk'"]
