@@ -8,7 +8,7 @@ env:
 	@test ! -f .env || { echo ".env already exists, remove it first"; exit 1; }
 	@while IFS= read -r line; do \
 		case "$$line" in \
-			*=change-me) echo "$${line%change-me}$$(openssl rand -hex 24)" ;; \
+			*=change-me*) echo "$${line%%=*}=$$(openssl rand -hex 24)" ;; \
 			*) echo "$$line" ;; \
 		esac; \
 	done < .env.example > .env
