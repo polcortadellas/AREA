@@ -2,7 +2,10 @@ import { screen, within } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, describe, expect, it } from 'vitest';
 
-import { resetMockWorkflows } from '@/mocks/handlers/workflows';
+import {
+  getMockWorkflows,
+  resetMockWorkflows,
+} from '@/mocks/handlers/workflows';
 import { server } from '@/mocks/node';
 import type { About, WorkflowInput } from '@/shared/api/generated/model';
 import { expectNoA11yViolations } from '@/test/axe';
@@ -137,11 +140,23 @@ describe('WorkflowBuilderPage', () => {
     server.use(
       http.post('*/workflows', async ({ request }) => {
         submitted = (await request.json()) as WorkflowInput;
-        return new HttpResponse(null, { status: 200 });
+        const now = '2026-11-28T00:00:00Z';
+        return HttpResponse.json(
+          {
+            id: 'wf-demo',
+            name: submitted.name,
+            enabled: submitted.enabled ?? true,
+            created_at: now,
+            updated_at: now,
+            nodes: submitted.nodes,
+            edges: submitted.edges,
+          },
+          { status: 201 },
+        );
       }),
     );
 
-    const { user, container } = renderRoute('/workflows/new');
+    const { user, container, router } = renderRoute('/workflows/new');
     const nameInput = await screen.findByLabelText('Workflow name');
     await user.type(nameInput, 'GitHub issue router');
 
@@ -220,6 +235,7 @@ describe('WorkflowBuilderPage', () => {
     expect(await screen.findByRole('status')).toHaveTextContent(
       'Workflow validated and saved.',
     );
+    expect(router.state.location.pathname).toBe('/workflows/wf-demo/edit');
     expect(submitted).toEqual({
       name: 'GitHub issue router',
       enabled: true,
@@ -377,5 +393,81 @@ describe('WorkflowBuilderPage', () => {
     ).toBeInTheDocument();
 
     await expectNoA11yViolations(container);
+  });
+
+  it('redirects to the edit route after creating a workflow so a second save updates it via PUT', async () => {
+    resetMockWorkflows([], []);
+
+    const calls: Array<{ method: string; path: string; body: WorkflowInput }> =
+      [];
+    server.use(
+      http.post('*/workflows', async ({ request }) => {
+        calls.push({
+          method: request.method,
+          path: new URL(request.url).pathname,
+          body: (await request.clone().json()) as WorkflowInput,
+        });
+      }),
+      http.put('*/workflows/:workflowId', async ({ request }) => {
+        calls.push({
+          method: request.method,
+          path: new URL(request.url).pathname,
+          body: (await request.clone().json()) as WorkflowInput,
+        });
+      }),
+    );
+
+    const { user, router } = renderRoute('/workflows/new');
+    const nameInput = await screen.findByLabelText('Workflow name');
+    await user.type(nameInput, 'First draft');
+
+    const reaction1 = screen.getByTestId('step-reaction_1');
+    await user.type(
+      within(reaction1).getByLabelText('message'),
+      'Count {{{{ trigger.count }}',
+    );
+
+    await user.click(screen.getByRole('button', { name: 'Save workflow' }));
+
+    expect(
+      await screen.findByRole('heading', { name: 'Edit workflow' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Workflow validated and saved.',
+    );
+
+    const createdId = getMockWorkflows()[0]?.id;
+    expect(createdId).toBeTruthy();
+    expect(router.state.location.pathname).toBe(`/workflows/${createdId}/edit`);
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({
+      method: 'POST',
+      path: '/workflows',
+      body: { name: 'First draft' },
+    });
+
+    const editNameInput = screen.getByLabelText('Workflow name');
+    expect(editNameInput).toHaveValue('First draft');
+    await user.clear(editNameInput);
+    await user.type(editNameInput, 'Updated draft');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Save workflow' }));
+
+    expect(await screen.findByRole('status')).toHaveTextContent(
+      'Workflow validated and saved.',
+    );
+    expect(router.state.location.pathname).toBe(`/workflows/${createdId}/edit`);
+    expect(calls).toHaveLength(2);
+    expect(calls[1]).toMatchObject({
+      method: 'PUT',
+      path: `/workflows/${createdId}`,
+      body: { name: 'Updated draft' },
+    });
+    expect(getMockWorkflows()).toHaveLength(1);
+    expect(getMockWorkflows()[0]).toMatchObject({
+      id: createdId,
+      name: 'Updated draft',
+    });
   });
 });

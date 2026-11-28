@@ -16,7 +16,10 @@ export function signIn() {
 /** Renders the real route tree at `path`, with a fresh query cache per test. */
 export function renderRoute(path = '/') {
   const router = createMemoryRouter(routes, { initialEntries: [path] });
-  return renderWithProviders(<RouterProvider router={router} />);
+  return {
+    router,
+    ...renderWithProviders(<RouterProvider router={router} />),
+  };
 }
 
 export function renderWithProviders(ui: ReactElement) {

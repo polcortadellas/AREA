@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router';
+import { useLocation, useNavigate, useParams } from 'react-router';
 
 import { ConditionStepCard } from '@/features/builder/components/ConditionStepCard';
 import { ReactionStepCard } from '@/features/builder/components/ReactionStepCard';
@@ -45,9 +45,13 @@ import { Label } from '@/shared/ui/label';
 type ReactionListKey =
   'reactions' | 'trueBranchReactions' | 'falseBranchReactions';
 
+type BuilderLocationState = { saved?: boolean } | null;
+
 export function WorkflowBuilderPage() {
   const { t } = useTranslation();
   const { workflowId } = useParams<{ workflowId?: string }>();
+  const location = useLocation();
+  const initialSaved = Boolean((location.state as BuilderLocationState)?.saved);
   const aboutQuery = useGetAbout();
   const workflowQuery = useGetWorkflow(workflowId ?? '', {
     query: { enabled: Boolean(workflowId) },
@@ -106,6 +110,7 @@ export function WorkflowBuilderPage() {
       about={about}
       workflowId={workflowId}
       existingWorkflow={workflowQuery.data}
+      initialSaved={initialSaved}
     />
   );
 }
@@ -114,12 +119,15 @@ function WorkflowBuilderForm({
   about,
   workflowId,
   existingWorkflow,
+  initialSaved = false,
 }: {
   about: About;
   workflowId?: string;
   existingWorkflow?: Workflow;
+  initialSaved?: boolean;
 }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [draft, setDraft] = useState<WorkflowDraft>(() =>
     existingWorkflow
@@ -129,7 +137,7 @@ function WorkflowBuilderForm({
   const [nameError, setNameError] = useState(false);
   const [serverErrors, setServerErrors] =
     useState<ParsedWorkflowErrors>(emptyWorkflowErrors);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(initialSaved);
 
   const createMutation = useCreateWorkflow();
   const replaceMutation = useReplaceWorkflow();
@@ -321,17 +329,26 @@ function WorkflowBuilderForm({
     const payload = toWorkflowInput(draft, about);
     try {
       if (workflowId) {
-        await replaceMutation.mutateAsync({ workflowId, data: payload });
-        await queryClient.invalidateQueries({
-          queryKey: getGetWorkflowQueryKey(workflowId),
+        const updated = await replaceMutation.mutateAsync({
+          workflowId,
+          data: payload,
         });
+        queryClient.setQueryData(getGetWorkflowQueryKey(workflowId), updated);
+        await queryClient.invalidateQueries({
+          queryKey: getListWorkflowsQueryKey(),
+        });
+        setSaved(true);
       } else {
-        await createMutation.mutateAsync({ data: payload });
+        const created = await createMutation.mutateAsync({ data: payload });
+        queryClient.setQueryData(getGetWorkflowQueryKey(created.id), created);
+        await queryClient.invalidateQueries({
+          queryKey: getListWorkflowsQueryKey(),
+        });
+        await navigate(`/workflows/${created.id}/edit`, {
+          replace: true,
+          state: { saved: true },
+        });
       }
-      await queryClient.invalidateQueries({
-        queryKey: getListWorkflowsQueryKey(),
-      });
-      setSaved(true);
     } catch (error) {
       setServerErrors(extractWorkflowProblems(error, activeNodeIds(draft)));
     }

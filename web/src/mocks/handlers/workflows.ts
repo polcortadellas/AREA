@@ -287,6 +287,7 @@ const initialRuns: RunDetail[] = [
 
 let storedWorkflows: Workflow[] = structuredClone(initialWorkflows);
 let storedRuns: RunDetail[] = structuredClone(initialRuns);
+let workflowSeq = 1;
 let runSeq = 1;
 
 export function resetMockWorkflows(
@@ -295,6 +296,7 @@ export function resetMockWorkflows(
 ) {
   storedWorkflows = structuredClone(initial);
   storedRuns = structuredClone(runs);
+  workflowSeq = 1;
   runSeq = 1;
 }
 
@@ -597,7 +599,7 @@ export const workflowHandlers = [
 
     const now = new Date().toISOString();
     const created: Workflow = {
-      id: `wf-${storedWorkflows.length + 1}`,
+      id: `wf-${workflowSeq++}`,
       name: body.name || 'Untitled workflow',
       enabled: body.enabled ?? true,
       created_at: now,
@@ -606,7 +608,7 @@ export const workflowHandlers = [
       edges: body.edges,
     };
     storedWorkflows = [created, ...storedWorkflows];
-    return new HttpResponse(null, { status: 200 });
+    return HttpResponse.json(created, { status: 201 });
   }),
 
   http.get('*/workflows/:workflowId', ({ params }) => {
